@@ -1,6 +1,6 @@
 ;; Note: to run with this file, execute:
 ;; `emacs -nw -q -l ./.emacs`
-:
+
 ;; A pointer to a local file.
 
 ;; Load all specified files under `.emacs.d/`
@@ -43,3 +43,6 @@
 
 ;; Set desktop mode
 (desktop-save-mode 1)
+
+;; Set line numbers to be visible
+(global-display-line-numbers-mode)
