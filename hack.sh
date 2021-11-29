@@ -1,2 +1,2 @@
 # Start the emacs editor, loading the custom config.
-emacs -nw -q -l ./.emacs ${HACK_ARGS}
+emacs -nw -q -l ./.emacs $1
