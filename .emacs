@@ -28,6 +28,11 @@
 ;; Config stuff ;;
 ;;;;;;;;;;;;;;;;;;
 
+;; splash-screen
+(setq inhibit-splash-screen t)
+
+;; Enable transient mark mode
+
 ;; theme
 (load-theme 'solarized-wombat-dark t)
 
@@ -37,9 +42,13 @@
 
 ;; save autosave files in here
 (setq backup-directory-alist
-      `((".*" . ,temporary-file-directory)))
+`
+    (
+        (".*" . ,temporary-file-directory)))
 (setq auto-save-file-name-transforms
-      `((".*" ,temporary-file-directory t)))
+`
+    (
+        (".*" ,temporary-file-directory t)))
 
 ;; Set desktop mode
 (desktop-save-mode 1)
