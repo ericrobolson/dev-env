@@ -50,8 +50,5 @@
     (
         (".*" ,temporary-file-directory t)))
 
-;; Set desktop mode
-(desktop-save-mode 1)
-
 ;; Set line numbers to be visible
 (global-display-line-numbers-mode)
