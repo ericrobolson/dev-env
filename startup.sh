@@ -13,5 +13,5 @@ cd ${DEV_ENV}
 git checkout -- . 
 git pull
 
-# Run emacs
-sh hack.sh
+# Run nix
+nix-shell
