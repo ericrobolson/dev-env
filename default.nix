@@ -29,5 +29,5 @@ stdenv.mkDerivation rec {
     ];
 
     # Load env vars in shell.
-    shellHook = ''set -a; source .env;'';
+    shellHook = ''set -a; source .env; sh hack.sh;'';
 }
