@@ -14,7 +14,7 @@
 
 ;; Load the packages
 (dolist 
-    (package '(slime solarized-theme))
+    (package '(slime nim-mode solarized-theme))
     (unless 
         (package-installed-p package)
         (package-install package)))
