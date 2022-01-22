@@ -5,7 +5,8 @@ stdenv.mkDerivation rec {
     env = buildEnv { name = name; paths = buildInputs; };
     buildInputs = [
         asdf
-        # Editors
+	clang
+	nim
         emacs
         # Elixir + Erlang
         erlang
