@@ -107,7 +107,6 @@ The most important thing is to cover the entire user flow if relevant. Otherwise
 It is critical to include both the "happy" and "unhappy" flows in the design document.
 Write out a testing plan and test cases for the feature.
 However, do not go too deep at this stage. Stick to high level details.
-Do not look at any files other than ones in '$DOC_DIRECTORY'.
 "
 
 build_prompt "$DESIGN_FILE" "$DESIGN_PROMPT" | run_agent 
