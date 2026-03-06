@@ -1,3 +1,0 @@
-(defun HI 
-    ()
-    (print "WUT"))

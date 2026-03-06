@@ -1,0 +1,169 @@
+#! /bin/bash
+
+# This script will create a new document for the feature and then use the prompt to create a plan for the feature.
+
+
+# General flow is
+# - Source feature name from user + idea for feature
+# - DESIGN.md (product discovery, requirements, etc)
+# - RESEARCH.md
+# - PLAN.md
+# - Append checklist to PLAN.md
+# - If plan is too complex, break down into smaller plans. 
+
+#
+# Validate input
+#
+if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
+  echo "Usage: de-feature <feature-name> <doc-directory> <prompt>"
+  exit 1
+fi
+
+#
+# Build out global variables
+#
+FEATURE_NAME="$1"
+DOC_DIRECTORY="$2"
+PROMPT="${@:3}"
+TERSENESS="Be concise and to the point. Stick to facts. Be succinct and terse. Don't be verbose."
+TIME_STAMP=$(date +%y%m%d%H%M)
+
+mkdir -p $DOC_DIRECTORY
+
+echo "==> Creating feature: $FEATURE_NAME in $DOC_DIRECTORY"
+
+# Run an agent.
+# Uses stdin to pass the prompt to the agent.
+run_agent() {
+  echo "==> Running agent for stage: $STAGE"
+    local STDIN_PROMPT=$(cat) 
+
+  if ! cursor-agent "$STDIN_PROMPT"; then
+    echo "ERROR: cursor-agent failed at stage: $STAGE" >&2
+    exit 1
+  fi
+  echo "==> Stage: $STAGE completed"
+}
+
+# Creates a new document.
+# $1: file name
+# Returns the file path.
+new_doc() {
+    local FILE_NAME="$1"
+    local FILE_PATH="$DOC_DIRECTORY/$TIME_STAMP-$FILE_NAME"
+    # echo "==> Creating file: $FILE_PATH"
+    # echo "==> File created: $FILE_PATH"
+    echo $FILE_PATH
+}
+
+# Wait until the user has finished editing the document.
+# If anything other than 'y|Y|yes|Yes|YES' is entered, keep looping.
+wait_for_user() {
+    local FILE_PATH="$1"
+    prompt="Have you finished editing the document $FILE_PATH? (y|n)
+> "
+    read -p "$prompt" response
+    while [[ "$response" != "y" && "$response" != "Y" && "$response" != "yes" && "$response" != "Yes" && "$response" != "YES" ]]; do
+        echo "==> Please enter 'y' or 'n'"
+        read -p "$prompt" response
+    done
+    echo "==> User finished editing the document $FILE_PATH"
+}
+
+build_prompt() {
+    local FILE_PATH="$1"
+    local PROMPT_INPUT="${@:2}"
+    local PROMPT="$PROMPT_INPUT
+
+If anything is unknown or unclear, write it out.
+$TERSENESS
+
+Output everything in the file '$FILE_PATH'.
+"
+
+    echo "$PROMPT"
+}
+
+
+#
+# Stage 1: Design
+#
+STAGE="DESIGN"
+DESIGN_FILE="$(new_doc "$FEATURE_NAME-design.md")"
+DESIGN_PROMPT="You are an expert product manager and designer.
+You are to help me design a new feature which should do the following:
+$PROMPT
+
+Explicitly outline any unknowns, questions, and any other details that are not clear.
+The most important thing is to cover the entire user flow if relevant. Otherwise ask for high level features.
+It is critical to include both the "happy" and "unhappy" flows in the design document.
+Write out a testing plan and test cases for the feature.
+However, do not go too deep at this stage. Stick to high level details.
+Do not look at any files other than ones in '$DOC_DIRECTORY'.
+"
+
+build_prompt "$DESIGN_FILE" "$DESIGN_PROMPT" | run_agent 
+wait_for_user "$DESIGN_FILE"
+
+
+
+#
+# Research
+#
+STAGE="RESEARCH"
+RESEARCH_FILE="$(new_doc "$FEATURE_NAME-research.md")"
+RESEARCH_PROMPT="You are helpful assistant that is an expert in software development, project planning, product discovery, and architecture.
+
+You are tasked to work on $FEATURE_NAME.
+
+You are given the following design document to reference:
+$DESIGN_FILE
+
+You need to research each element in depth, listing out the inticacies, challenges, and other details. 
+List out any prior art and existing solutions found in the repo.
+Analyze everything in great detail, providing deep research. Go through everything.
+List out any relevant files and their file paths with a brief summary of how it is useful.
+"
+
+build_prompt "$RESEARCH_FILE" "$RESEARCH_PROMPT" | run_agent 
+wait_for_user "$RESEARCH_FILE"
+
+#
+# Build out the plan
+#
+STAGE="PLAN"
+PLAN_FILE="$(new_doc "$FEATURE_NAME-plan.md")"
+PLAN_PROMPT="
+You are an expert at project management, development, architecture and design.
+You prefer simple, robust solutions that are easy to maintain and extend.
+
+You are tasked to work on $FEATURE_NAME.
+
+You are given the following design document to reference:
+$DESIGN_FILE
+
+You are given the following research document to reference:
+$RESEARCH_FILE
+
+Write a detailed document outlining how to implement this. include code snippets.
+"
+
+build_prompt "$PLAN_FILE" "$PLAN_PROMPT" | run_agent 
+wait_for_user "$PLAN_FILE"
+
+
+#
+# Append checklist to PLAN.md
+# 
+STAGE="CHECKLIST"
+CHECKLIST_FILE="$(new_doc "$FEATURE_NAME-checklist.md")"
+CHECKLIST_PROMPT="Given the following plan, generate a checklist of tasks that need to be completed to implement the feature.
+Be clear, concise, and explicit.
+Split each task into smaller tasks if necessary.
+Append the checklist to the end of the file.
+
+The file to reference is:
+$PLAN_FILE
+"
+
+build_prompt "$CHECKLIST_FILE" "$CHECKLIST_PROMPT" | run_agent 

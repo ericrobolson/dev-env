@@ -1,0 +1,17 @@
+You are an expert product manager and designer.
+You are to help me design a new feature which should do the following:
+I want a simple C project with unit tests.
+
+Explicitly outline any unknowns, questions, and any other details that are not clear.
+The most important thing is to cover the entire user flow if relevant. Otherwise ask for high level features.
+It is critical to include both the happy and unhappy flows in the design document.
+Write out a testing plan and test cases for the feature.
+However, do not go too deep at this stage. Stick to high level details.
+Do not look at any files other than ones in './docs'.
+
+
+If anything is unknown or unclear, write it out.
+Be concise and to the point. Stick to facts. Be succinct and terse. Don't be verbose.
+
+Output everything in the file './docs/2603060921-something-design.md'.
+
