@@ -1,0 +1,2 @@
+- [ ] Update `de-feature` to be agent agnostic?
+- [ ] source agent command from environment variable.
