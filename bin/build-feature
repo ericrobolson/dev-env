@@ -11,11 +11,13 @@
 # - Append checklist to PLAN.md
 # - If plan is too complex, break down into smaller plans. 
 
+
+
 #
 # Validate input
 #
 if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
-  echo "Usage: de-feature <feature-name> <doc-directory> <prompt>"
+  echo "Usage: build-feature <feature-name> <doc-directory> <prompt>"
   exit 1
 fi
 
@@ -24,11 +26,18 @@ fi
 #
 FEATURE_NAME="$1"
 DOC_DIRECTORY="$2"
+# Remove trailing slash from DOC_DIRECTORY if it exists
+DOC_DIRECTORY="${DOC_DIRECTORY%/}"
+
+
 PROMPT="${@:3}"
 TERSENESS="Be concise and to the point. Stick to facts. Be succinct and terse. Don't be verbose."
 TIME_STAMP=$(date +%y%m%d%H%M)
+AGENT=cursor-agent
 
-mkdir -p $DOC_DIRECTORY
+
+
+# mkdir -p $DOC_DIRECTORY
 
 echo "==> Creating feature: $FEATURE_NAME in $DOC_DIRECTORY"
 
@@ -36,10 +45,11 @@ echo "==> Creating feature: $FEATURE_NAME in $DOC_DIRECTORY"
 # Uses stdin to pass the prompt to the agent.
 run_agent() {
   echo "==> Running agent for stage: $STAGE"
-    local STDIN_PROMPT=$(cat) 
+  local STDIN_PROMPT=$(cat) 
+  echo "$STDIN_PROMPT"
 
-  if ! cursor-agent "$STDIN_PROMPT"; then
-    echo "ERROR: cursor-agent failed at stage: $STAGE" >&2
+  if ! $AGENT "$STDIN_PROMPT"; then
+    echo "ERROR: $AGENT failed at stage: $STAGE" >&2
     exit 1
   fi
   echo "==> Stage: $STAGE completed"
