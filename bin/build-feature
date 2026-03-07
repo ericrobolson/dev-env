@@ -25,14 +25,16 @@ fi
 # Build out global variables
 #
 FEATURE_NAME="$1"
-DOC_DIRECTORY="$2"
+TIME_STAMP=$(date +%y%m%d%H%M)
+DOC_DIRECTORY="$2/$TIME_STAMP-$FEATURE_NAME"
+
 # Remove trailing slash from DOC_DIRECTORY if it exists
 DOC_DIRECTORY="${DOC_DIRECTORY%/}"
 
 
+
 PROMPT="${@:3}"
 TERSENESS="Be concise and to the point. Stick to facts. Be succinct and terse. Don't be verbose."
-TIME_STAMP=$(date +%y%m%d%H%M)
 AGENT=cursor-agent
 
 
@@ -60,7 +62,7 @@ run_agent() {
 # Returns the file path.
 new_doc() {
     local FILE_NAME="$1"
-    local FILE_PATH="$DOC_DIRECTORY/$TIME_STAMP-$FILE_NAME"
+    local FILE_PATH="$DOC_DIRECTORY/$FILE_NAME"
     echo $FILE_PATH
 }
 
@@ -97,7 +99,7 @@ Output everything in the file '$FILE_PATH'.
 # Stage 1: Design
 #
 STAGE="DESIGN"
-DESIGN_FILE="$(new_doc "$FEATURE_NAME-01-design.md")"
+DESIGN_FILE="$(new_doc "01-design.md")"
 DESIGN_PROMPT="You are an expert product manager and designer.
 You are to help me design a new feature which should do the following:
 $PROMPT
@@ -118,7 +120,7 @@ wait_for_user "$DESIGN_FILE"
 # Stage 2:Research
 #
 STAGE="RESEARCH"
-RESEARCH_FILE="$(new_doc "$FEATURE_NAME-02-research.md")"
+RESEARCH_FILE="$(new_doc "02-research.md")"
 RESEARCH_PROMPT="You are helpful assistant that is an expert in software development, project planning, product discovery, and architecture.
 
 You are tasked to work on $FEATURE_NAME.
@@ -139,7 +141,7 @@ wait_for_user "$RESEARCH_FILE"
 # Stage 3: Plan
 #
 STAGE="PLAN"
-PLAN_FILE="$(new_doc "$FEATURE_NAME-03-plan.md")"
+PLAN_FILE="$(new_doc "03-plan.md")"
 PLAN_PROMPT="
 You are an expert at project management, development, architecture and design.
 You prefer simple, robust solutions that are easy to maintain and extend.
@@ -164,7 +166,7 @@ wait_for_user "$PLAN_FILE"
 # Stage 4: Checklist
 # 
 STAGE="CHECKLIST"
-CHECKLIST_FILE="$(new_doc "$FEATURE_NAME-04-checklist.md")"
+CHECKLIST_FILE="$(new_doc "04-checklist.md")"
 CHECKLIST_PROMPT="Given the following plan file in '$PLAN_FILE', generate a checklist of tasks that need to be completed to implement the feature.
 Be clear, concise, and explicit.
 Split each task into smaller tasks if necessary.

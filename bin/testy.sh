@@ -1,1 +1,0 @@
-AGENT="cursor-agent"
