@@ -36,6 +36,7 @@ DOC_DIRECTORY="${DOC_DIRECTORY%/}"
 PROMPT="${@:3}"
 TERSENESS="Be concise and to the point. Stick to facts. Be succinct and terse. Don't be verbose."
 AGENT=cursor-agent
+MODEL=opus-4.5-thinking
 
 
 
@@ -47,10 +48,11 @@ echo "==> Creating feature: $FEATURE_NAME in $DOC_DIRECTORY"
 # Uses stdin to pass the prompt to the agent.
 run_agent() {
   echo "==> Running agent for stage: $STAGE"
+  echo "==> MODEL: $MODEL"
   local STDIN_PROMPT=$(cat) 
-  echo "$STDIN_PROMPT"
+  echo "$STDIN_PROMPT"  
 
-  if ! $AGENT "$STDIN_PROMPT"; then
+  if ! $AGENT --model $MODEL "$STDIN_PROMPT"; then
     echo "ERROR: $AGENT failed at stage: $STAGE" >&2
     exit 1
   fi
@@ -183,9 +185,13 @@ wait_for_user "$CHECKLIST_FILE"
 STAGE="IMPLEMENTATION"
 IMPLEMENTATION_PROMPT="You are an expert at software development, project management, architecture and design.
 You prefer simple, robust solutions that are easy to maintain and extend.
+Make code modular wherever possible.
 You are tasked to work on $FEATURE_NAME.
 Implement the following plan document in '$CHECKLIST_FILE'.
 "
+
+# Use a cheaper model for implementation. Experiment with Kimi-k2
+MODEL=kimi-k2.5
 
 echo "$IMPLEMENTATION_PROMPT" | run_agent 
 
