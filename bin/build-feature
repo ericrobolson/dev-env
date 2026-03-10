@@ -35,7 +35,6 @@ DOC_DIRECTORY="${DOC_DIRECTORY%/}"
 
 PROMPT="${@:3}"
 TERSENESS="Be concise and to the point. Stick to facts. Be succinct and terse. Don't be verbose."
-AGENT=cursor-agent
 MODEL=opus-4.5-thinking
 
 
@@ -44,16 +43,30 @@ MODEL=opus-4.5-thinking
 
 echo "==> Creating feature: $FEATURE_NAME in $DOC_DIRECTORY"
 
-# Run an agent.
+# Run an agent using Cursor
 # Uses stdin to pass the prompt to the agent.
-run_agent() {
-  echo "==> Running agent for stage: $STAGE"
+run_cursor_agent() {
+  echo "==> Running cursor-agent for stage: $STAGE"
   echo "==> MODEL: $MODEL"
+
   local STDIN_PROMPT=$(cat) 
   echo "$STDIN_PROMPT"  
 
-  if ! $AGENT --model $MODEL "$STDIN_PROMPT"; then
-    echo "ERROR: $AGENT failed at stage: $STAGE" >&2
+  if ! cursor-agent --model $MODEL "$STDIN_PROMPT"; then
+    echo "ERROR: cursor-agent failed at stage: $STAGE" >&2
+    exit 1
+  fi
+  echo "==> Stage: $STAGE completed"
+}
+
+run_claude_agent() {
+  echo "==> Running claude for stage: $STAGE"
+
+  local STDIN_PROMPT=$(cat) 
+  echo "$STDIN_PROMPT"  
+
+  if ! claude "$STDIN_PROMPT"; then
+    echo "ERROR: claude failed at stage: $STAGE" >&2
     exit 1
   fi
   echo "==> Stage: $STAGE completed"
@@ -113,7 +126,7 @@ Write out a testing plan and test cases for the feature.
 However, do not go too deep at this stage. Stick to high level details.
 "
 
-build_prompt "$DESIGN_FILE" "$DESIGN_PROMPT" | run_agent 
+build_prompt "$DESIGN_FILE" "$DESIGN_PROMPT" | run_claude_agent 
 wait_for_user "$DESIGN_FILE"
 
 
@@ -136,7 +149,7 @@ Analyze everything in great detail, providing deep research. Go through everythi
 List out any relevant files and their file paths with a brief summary of how it is useful.
 "
 
-build_prompt "$RESEARCH_FILE" "$RESEARCH_PROMPT" | run_agent 
+build_prompt "$RESEARCH_FILE" "$RESEARCH_PROMPT" | run_claude_agent 
 wait_for_user "$RESEARCH_FILE"
 
 #
@@ -160,7 +173,7 @@ Write a detailed document outlining how to implement this. include code snippets
 Ensure that both '$DESIGN_FILE' and '$RESEARCH_FILE' are linked in the plan.
 "
 
-build_prompt "$PLAN_FILE" "$PLAN_PROMPT" | run_agent 
+build_prompt "$PLAN_FILE" "$PLAN_PROMPT" | run_claude_agent 
 wait_for_user "$PLAN_FILE"
 
 
@@ -175,7 +188,7 @@ Split each task into smaller tasks if necessary.
 Append the generated checklist to the end of the content in '$PLAN_FILE'.
 "
 
-build_prompt "$CHECKLIST_FILE" "$CHECKLIST_PROMPT" | run_agent 
+build_prompt "$CHECKLIST_FILE" "$CHECKLIST_PROMPT" | run_claude_agent 
 wait_for_user "$CHECKLIST_FILE"
 
 
@@ -193,7 +206,7 @@ Implement the following plan document in '$CHECKLIST_FILE'.
 # Use a cheaper model for implementation. Experiment with Kimi-k2
 MODEL=kimi-k2.5
 
-echo "$IMPLEMENTATION_PROMPT" | run_agent 
+echo "$IMPLEMENTATION_PROMPT" | run_claude_agent 
 
 
 echo "==> Implementation completed"
