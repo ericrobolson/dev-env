@@ -1,0 +1,123 @@
+#!/bin/bash
+# Shared helper functions for bin/ scripts
+
+# Exit if sourced from non-bash shell
+if [ -z "$BASH_VERSION" ]; then
+    echo "Error: helpers.sh must be sourced from bash" >&2
+    return 1
+fi
+
+# validate_args_min: Exit if $# < count
+# Usage: validate_args_min <count> <usage_message>
+validate_args_min() {
+    local min_count="$1"
+    local usage_msg="$2"
+    shift 2
+
+    if [[ $# -lt $min_count ]]; then
+        echo "Usage: $usage_msg" >&2
+        return 1
+    fi
+}
+
+# init_globals: Set shared global variables
+# Sets: TIME_STAMP, IDE, AGENT_TYPE, CURSOR_MODEL, TERSENESS
+init_globals() {
+    TIME_STAMP=$(date +%y%m%d%H%M)
+    IDE="${IDE:-cursor}"
+    AGENT_TYPE="${AGENT_TYPE:-cursor}"
+    CURSOR_MODEL="${CURSOR_MODEL:-kimi-k2.5}"
+    TERSENESS="Be concise and to the point. Stick to facts. Be succinct and terse. Don't be verbose."
+
+    # Validate AGENT_TYPE
+    if [[ "$AGENT_TYPE" != "cursor" && "$AGENT_TYPE" != "claude" ]]; then
+        echo "Error: AGENT_TYPE must be 'cursor' or 'claude', got: $AGENT_TYPE" >&2
+        return 1
+    fi
+}
+
+# run_agent: Execute cursor or claude agent based on AGENT_TYPE
+# Usage: echo "prompt" | run_agent <stage_name>
+run_agent() {
+    local stage="$1"
+    local prompt
+    prompt=$(cat)
+
+    if [[ -z "$prompt" ]]; then
+        echo "Error: No prompt provided to run_agent" >&2
+        return 1
+    fi
+
+    echo "$prompt"
+
+    if [[ "$AGENT_TYPE" == "claude" ]]; then
+        if ! echo "$prompt" | claude --dangerously-skip-permissions; then
+            echo "Error: claude agent failed at stage '$stage'" >&2
+            return 1
+        fi
+    else
+        if ! echo "$prompt" | cursor-agent --model "$CURSOR_MODEL"; then
+            echo "Error: cursor-agent failed at stage '$stage'" >&2
+            return 1
+        fi
+    fi
+
+    echo "✓ Stage '$stage' complete"
+}
+
+# new_doc: Return filepath for new document
+# Usage: filepath=$(new_doc <directory> <filename>)
+new_doc() {
+    local dir="${1%/}"  # Remove trailing slash
+    local filename="$2"
+    echo "$dir/$filename"
+}
+
+# wait_for_user: Loop until user confirms (skip if AGENT_TYPE=claude or non-interactive)
+# Usage: wait_for_user <filepath>
+wait_for_user() {
+    local filepath="$1"
+
+    # Skip for claude agent or non-interactive shells
+    if [[ "$AGENT_TYPE" == "claude" ]] || [[ ! -t 0 ]]; then
+        return 0
+    fi
+
+    echo ""
+    echo "Review: $filepath"
+    echo "Open file in IDE to review. Continue? (y/n)"
+
+    while true; do
+        read -r response
+        case "$response" in
+            [yY]|[yY][eE][sS])
+                return 0
+                ;;
+            [nN]|[nN][oO])
+                echo "Continuing without confirmation..."
+                return 0
+                ;;
+            *)
+                echo "Please enter 'y' or 'n':"
+                ;;
+        esac
+    done
+}
+
+# build_prompt: Append standard suffix to prompt
+# Usage: prompt=$(build_prompt <filepath> <instructions>...)
+build_prompt() {
+    local filepath="$1"
+    shift
+    local instructions="$*"
+
+    echo "$instructions
+
+$TERSENESS
+
+Output everything to the file '$filepath'.
+
+Then open the file '$filepath' in the IDE '$IDE' so I can review it.
+
+If possible, play an audio notification to alert me that the file is ready to review."
+}
