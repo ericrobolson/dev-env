@@ -25,7 +25,7 @@ validate_args_min() {
 init_globals() {
     TIME_STAMP=$(date +%y%m%d%H%M)
     IDE="${IDE:-cursor}"
-    AGENT_TYPE="${AGENT_TYPE:-cursor}"
+    AGENT_TYPE="${AGENT_TYPE:-claude}"
     CURSOR_MODEL="${CURSOR_MODEL:-kimi-k2.5}"
     TERSENESS="Be concise and to the point. Stick to facts. Be succinct and terse. Don't be verbose."
     

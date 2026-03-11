@@ -23,9 +23,11 @@ A reproducible development environment with AI-assisted feature building tools.
 
 ### Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `TODO` | Yes (or no) | TODO |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `AGENT_TYPE` | `claude` | Agent to use: `claude` or `cursor` |
+| `IDE` | `cursor` | IDE to open files: `cursor`, `vscode`, etc |
+| `CURSOR_MODEL` | `kimi-k2.5` | Model for cursor-agent (when `AGENT_TYPE=cursor`) |
 
 ### Platform Support
 
@@ -119,17 +121,16 @@ build-feature UserAuth docs "Build user authentication with OAuth2"
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
 │  1. Design  │───▶│ 2. Research │───▶│   3. Plan   │───▶│ 4. Checklist│───▶│ 5. Implement│
-│   (opus)    │    │   (opus)    │    │   (opus)    │    │   (opus)    │    │   (kimi)    │
 └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
 ```
 
-| Stage | Output File | Model |
+| Stage | Output File | Purpose |
 |-------|-------------|-------|
-| Design | `01-design.md` | opus-4.5-thinking |
-| Research | `02-research.md` | opus-4.5-thinking |
-| Plan | `03-plan.md` | opus-4.5-thinking |
-| Checklist | `04-checklist.md` | opus-4.5-thinking |
-| Implementation | (modifies codebase) | kimi-k2.5 |
+| Design | `01-design.md` | Design the feature |
+| Research | `02-research.md` | Research the feature |
+| Plan | `03-plan.md` | Plan the feature |
+| Checklist | `04-checklist.md` | Create a checklist of tasks to complete the feature |
+| Implementation | (modifies codebase) | Implement the feature |
 
 ### Output Directory
 
@@ -144,9 +145,9 @@ build-feature UserAuth docs "Build user authentication with OAuth2"
 ### Interactive Flow
 
 After each stage (cursor agent mode):
-1. File opens in Cursor IDE
+1. File opens in IDE/displays file name
 2. Audio notification plays
-3. Script prompts: "Continue? (y/n)"
+3. Script prompts: "Continue? (y/n)" to move to next stage
 4. Enter `y` or `yes` to proceed
 
 ### Exit Codes
@@ -162,21 +163,30 @@ After each stage (cursor agent mode):
 
 ### Agent Type
 
-Currently hardcoded in `bin/build-feature` (line 40) and `bin/gen-doc` (line 33):
+Set via environment variable:
 
 ```bash
-AGENT_TYPE="cursor"  # Uses cursor-agent
-# AGENT_TYPE="claude"  # Uses claude CLI directly
+export AGENT_TYPE=claude  # Uses claude CLI (default)
+export AGENT_TYPE=cursor  # Uses cursor-agent
 ```
 
-### Models
+### IDE
 
-| Stage | Model | Hardcoded Location |
-|-------|-------|-------------------|
-| Planning stages (1-4) | opus-4.5-thinking | build-feature line 38 |
-| Implementation (5) | kimi-k2.5 | build-feature line 228 |
+Set which IDE to open generated files in:
 
-**Note:** Models are not yet configurable. See TODOS.md for planned improvements. Model selection should be abstracted away in future iterations.
+```bash
+export IDE=cursor   # Default
+export IDE=vscode   # VSCode
+```
+
+### Models (cursor-agent only)
+
+When using `AGENT_TYPE=cursor`, you can configure the model:
+
+```bash
+export CURSOR_MODEL=kimi-k2.5        # Default for implementation
+export CURSOR_MODEL=opus-4.5-thinking # For planning stages
+```
 
 ---
 
