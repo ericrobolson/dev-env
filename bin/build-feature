@@ -132,3 +132,30 @@ echo "$IMPLEMENTATION_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
 
 
 echo "==> Implementation completed"
+
+#
+# Stage 6: Debug
+#
+STAGE="debug"
+DEBUG_FILE=$(new_doc "$DOC_DIRECTORY" "05-debug.md")
+echo "" >> "$DEBUG_FILE" # Create the file
+DEBUG_PROMPT="You are an expert at debugging and fixing software issues.
+You are tasked to work on $FEATURE_NAME.
+
+Reference these documents for full context:
+- Design: '$DESIGN_FILE'
+- Research: '$RESEARCH_FILE'
+- Plan: '$PLAN_FILE'
+- Checklist: '$CHECKLIST_FILE'
+
+Do not run anything at this point. You are waiting on input from the user.
+
+The user will describe bugs, issues, or changes they want to make found after implementation.
+Fix each item as described.
+
+Write all conversation output, including what was changed and why, to '$DEBUG_FILE'.
+Each interaction should be recorded in '$DEBUG_FILE'."
+
+echo "==> Starting debug session. Describe bugs to fix. Output: $DEBUG_FILE"
+echo "$DEBUG_PROMPT" | run_agent "$STAGE" || exit 1
+echo "==> Debug session completed"
