@@ -35,11 +35,13 @@ DOC_DIRECTORY="${DOC_DIRECTORY%/}"
 
 PROMPT="${@:3}"
 TERSENESS="Be concise and to the point. Stick to facts. Be succinct and terse. Don't be verbose."
-MODEL=opus-4.5-thinking
+CURSOR_MODEL=opus-4.5-thinking
+CURSOR_MODEL=kimi-k2.5
+IDE="cursor"
+AGENT_TYPE="cursor"
 
 
-
-# mkdir -p $DOC_DIRECTORY
+mkdir -p $DOC_DIRECTORY
 
 echo "==> Creating feature: $FEATURE_NAME in $DOC_DIRECTORY"
 
@@ -47,12 +49,12 @@ echo "==> Creating feature: $FEATURE_NAME in $DOC_DIRECTORY"
 # Uses stdin to pass the prompt to the agent.
 run_cursor_agent() {
   echo "==> Running cursor-agent for stage: $STAGE"
-  echo "==> MODEL: $MODEL"
+  echo "==> MODEL: $CURSOR_MODEL"
 
   local STDIN_PROMPT=$(cat) 
   echo "$STDIN_PROMPT"  
 
-  if ! cursor-agent --model $MODEL "$STDIN_PROMPT"; then
+  if ! cursor-agent --model $CURSOR_MODEL "$STDIN_PROMPT"; then
     echo "ERROR: cursor-agent failed at stage: $STAGE" >&2
     exit 1
   fi
@@ -65,12 +67,22 @@ run_claude_agent() {
   local STDIN_PROMPT=$(cat) 
   echo "$STDIN_PROMPT"  
 
-  if ! claude --dangerously-skip-permissions -p "$STDIN_PROMPT"; then
-    echo "ERROR: claude failed at stage: $STAGE" >&2
-    exit 1
+  if [[ "$AGENT_TYPE" == "claude" ]]; then
+    if ! claude --dangerously-skip-permissions "$STDIN_PROMPT"; then
+      echo "ERROR: claude failed at stage: $STAGE" >&2
+      exit 1
+    fi
+  else
+    if ! cursor-agent --model $CURSOR_MODEL "$STDIN_PROMPT"; then
+      echo "ERROR: cursor-agent failed at stage: $STAGE" >&2
+      exit 1
+    fi
   fi
   echo "==> Stage: $STAGE completed"
 }
+
+
+
 
 # Creates a new document.
 # $1: file name
@@ -84,6 +96,11 @@ new_doc() {
 # Wait until the user has finished editing the document.
 # If anything other than 'y|Y|yes|Yes|YES' is entered, keep looping.
 wait_for_user() {
+    # Claude doesn't need to wait for the user as we leave the agent running.
+    if [[ "$AGENT_TYPE" == "claude" ]]; then
+        return
+    fi
+
     local FILE_PATH="$1"
     prompt="Have you finished editing the document $FILE_PATH? (y|n)
 > "
@@ -104,6 +121,11 @@ If anything is unknown or unclear, write it out.
 $TERSENESS
 
 Output everything to the file '$FILE_PATH'.
+
+Open the file '$FILE_PATH' in the IDE '$IDE' so I can review it.
+
+If possible, play an audio notification to alert me that the file is ready to review.
+
 "
 
     echo "$PROMPT"
@@ -204,7 +226,7 @@ Implement the following plan document in '$CHECKLIST_FILE'.
 "
 
 # Use a cheaper model for implementation. Experiment with Kimi-k2
-MODEL=kimi-k2.5
+CURSOR_MODEL=kimi-k2.5
 
 echo "$IMPLEMENTATION_PROMPT" | run_claude_agent 
 

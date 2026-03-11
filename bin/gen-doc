@@ -1,44 +1,42 @@
 #! /bin/bash
 
-# This script will create a new document a project.
-
+# This script will create a new document for a project.
 
 # General flow is
-# - Get feature name + document directory from user
+# - Get doc name + document directory from user
 # - Create a markdown file with the name and directory path
 # - Work through the prompt and store everything in a markdown file.
-
 
 #
 # Validate input
 #
 if [[ -z "$1" || -z "$2" ]]; then
-  echo "Usage: one-shot <feature-name> <prompt>"
+  echo "Usage: gen-doc <doc-name> <prompt>"
   exit 1
 fi
 
 #
 # Build out global variables
 #
-FEATURE_NAME="$1"
+DOC_NAME="$1"
 PROMPT="${@:2}"
 
 TIME_STAMP=$(date +%y%m%d%H%M)
-FILE_PATH="$TIME_STAMP-$FEATURE_NAME.md"
+FILE_PATH="$TIME_STAMP-$DOC_NAME.md"
 
 echo "==> File path: $FILE_PATH"
 IDE="cursor"
+AGENT_TYPE="cursor"  # Set to "claude" to use claude CLI directly
 
 # Run an agent using Cursor
 # Uses stdin to pass the prompt to the agent.
 run_cursor_agent() {
   echo "==> Running cursor-agent for stage: $STAGE"
-  echo "==> MODEL: $MODEL"
 
-  local STDIN_PROMPT=$(cat) 
-  echo "$STDIN_PROMPT"  
+  local STDIN_PROMPT=$(cat)
+  echo "$STDIN_PROMPT"
 
-  if ! cursor-agent --model $MODEL "$STDIN_PROMPT"; then
+  if ! cursor-agent "$STDIN_PROMPT"; then
     echo "ERROR: cursor-agent failed at stage: $STAGE" >&2
     exit 1
   fi
@@ -48,8 +46,8 @@ run_cursor_agent() {
 run_claude_agent() {
   echo "==> Running claude for stage: $STAGE"
 
-  local STDIN_PROMPT=$(cat) 
-  echo "$STDIN_PROMPT"  
+  local STDIN_PROMPT=$(cat)
+  echo "$STDIN_PROMPT"
 
   if ! claude --dangerously-skip-permissions "$STDIN_PROMPT"; then
     echo "ERROR: claude failed at stage: $STAGE" >&2
@@ -59,7 +57,7 @@ run_claude_agent() {
 }
 
 LLM_PROMPT="You prefer simple, robust solutions that are easy to maintain and extend.
-You are tasked to work on $FEATURE_NAME.
+You are tasked to work on $DOC_NAME.
 
 $PROMPT
 
@@ -70,4 +68,8 @@ Open the file '$FILE_PATH' in the IDE '$IDE' so I can review it.
 If possible, play an audio notification to alert me that the file is ready to review.
 "
 
-echo "$LLM_PROMPT" | run_claude_agent 
+if [[ "$AGENT_TYPE" == "claude" ]]; then
+  echo "$LLM_PROMPT" | run_claude_agent
+else
+  echo "$LLM_PROMPT" | run_cursor_agent
+fi
