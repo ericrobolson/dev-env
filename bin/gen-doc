@@ -22,7 +22,7 @@ validate_args_min 2 "gen-doc <doc-name> <prompt>" "$@" || exit 1
 # Arguments
 DOC_NAME="$1"
 shift
-PROMPT="$*"
+PROMPT="$@"
 
 # Initialize globals
 init_globals || exit 1

@@ -26,7 +26,7 @@ validate_args_min 3 "build-feature <feature-name> <doc-directory> <prompt>" "$@"
 FEATURE_NAME="$1"
 DOC_DIRECTORY="${2%/}"
 shift 2
-PROMPT="$*"
+PROMPT="$@"
 
 # Initialize globals
 init_globals || exit 1
