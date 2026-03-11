@@ -28,6 +28,7 @@ init_globals() {
     AGENT_TYPE="${AGENT_TYPE:-cursor}"
     CURSOR_MODEL="${CURSOR_MODEL:-kimi-k2.5}"
     TERSENESS="Be concise and to the point. Stick to facts. Be succinct and terse. Don't be verbose."
+    
 
     # Validate AGENT_TYPE
     if [[ "$AGENT_TYPE" != "cursor" && "$AGENT_TYPE" != "claude" ]]; then
@@ -47,8 +48,6 @@ run_agent() {
         echo "Error: No prompt provided to run_agent" >&2
         return 1
     fi
-
-    echo "$prompt"
 
     if [[ "$AGENT_TYPE" == "claude" ]]; then
         if ! echo "$prompt" | claude --dangerously-skip-permissions; then
@@ -109,7 +108,7 @@ wait_for_user() {
 build_prompt() {
     local filepath="$1"
     shift
-    local instructions="$*"
+    local instructions="$@"
 
     echo "$instructions
 

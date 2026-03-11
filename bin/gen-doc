@@ -38,4 +38,5 @@ You are tasked to work on $DOC_NAME.
 
 $PROMPT"
 
-echo "$FULL_PROMPT" | build_prompt "$FILE_PATH" | run_agent "generate" || exit 1
+
+ build_prompt "$FILE_PATH" "$FULL_PROMPT" | run_agent "generate" || exit 1
