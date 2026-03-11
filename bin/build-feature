@@ -65,7 +65,7 @@ run_claude_agent() {
   local STDIN_PROMPT=$(cat) 
   echo "$STDIN_PROMPT"  
 
-  if ! claude "$STDIN_PROMPT"; then
+  if ! claude --dangerously-skip-permissions -p "$STDIN_PROMPT"; then
     echo "ERROR: claude failed at stage: $STAGE" >&2
     exit 1
   fi
@@ -103,7 +103,7 @@ build_prompt() {
 If anything is unknown or unclear, write it out.
 $TERSENESS
 
-Output everything in the file '$FILE_PATH'.
+Output everything to the file '$FILE_PATH'.
 "
 
     echo "$PROMPT"
