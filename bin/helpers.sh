@@ -38,9 +38,15 @@ init_globals() {
 }
 
 # run_agent: Execute cursor or claude agent based on AGENT_TYPE
-# Usage: echo "prompt" | run_agent <stage_name>
+# Usage: echo "prompt" | run_agent <stage_name> [--no-interactive]
 run_agent() {
     local stage="$1"
+    local interactive=true
+
+    if [[ "$2" == "--no-interactive" ]]; then
+        interactive=false
+    fi
+
     local prompt
     prompt=$(cat)
 
@@ -50,12 +56,20 @@ run_agent() {
     fi
 
     if [[ "$AGENT_TYPE" == "claude" ]]; then
-        if ! echo "$prompt" | claude --dangerously-skip-permissions; then
+        local cmd=(claude --dangerously-skip-permissions)
+        if [[ "$interactive" == false ]]; then
+            cmd+=(--print)
+        fi
+        if ! echo "$prompt" | "${cmd[@]}"; then
             echo "Error: claude agent failed at stage '$stage'" >&2
             return 1
         fi
     else
-        if ! echo "$prompt" | cursor-agent --model "$CURSOR_MODEL"; then
+        local cmd=(cursor-agent --model "$CURSOR_MODEL")
+        if [[ "$interactive" == false ]]; then
+            cmd+=(--print)
+        fi
+        if ! echo "$prompt" | "${cmd[@]}"; then
             echo "Error: cursor-agent failed at stage '$stage'" >&2
             return 1
         fi

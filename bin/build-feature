@@ -123,9 +123,12 @@ IMPLEMENTATION_PROMPT="You are an expert at software development, project manage
 You prefer simple, robust solutions that are easy to maintain and extend.
 Make code modular wherever possible.
 You are tasked to work on $FEATURE_NAME.
-Implement the following plan document in '$CHECKLIST_FILE'."
+Implement the following plan document in '$CHECKLIST_FILE'.
 
-echo "$IMPLEMENTATION_PROMPT" | run_agent "$STAGE" || exit 1
+If possible, play an audio notification to alert me when everything is finished."
+
+echo "Building code..."
+echo "$IMPLEMENTATION_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
 
 
 echo "==> Implementation completed"
