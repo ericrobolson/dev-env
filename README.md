@@ -162,34 +162,35 @@ After each stage (cursor agent mode):
 
 ## Usage: clean-room
 
-Clean-room reverse engineering pipeline. Analyzes a target system, produces functional specs, reviews for compliance, implements from specs only, and enters a debug session.
+Clean-room reverse engineering pipeline. Analyzes a target system, produces functional specs, reviews for compliance, and generates an implementation prompt for manual execution.
 
 ### Syntax
 
 ```bash
-clean-room <feature-name> <target-directory> <spec-output-directory> <implementation-directory> <prompt>
+clean-room <feature-name> <target-directory> <spec-output-directory> <implementation-directory> <test-directory> <prompt>
 ```
 
 ### Example
 
 ```bash
-clean-room LibFoo ./vendor/libfoo ./specs ./impl "Reimplement libfoo's public API"
+clean-room LibFoo ./vendor/libfoo ./specs ./impl ./tests "Reimplement libfoo's public API"
 ```
 
 ### Pipeline Stages
 
 ```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│ 1. Analysis │───▶│2. Compliance│───▶│ 3. Implement│───▶│  4. Debug   │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────────┐
+│ 1. Analysis │───▶│2. Compliance│───▶│ 3. Implementation Prep  │
+└─────────────┘    └─────────────┘    └─────────────────────────┘
 ```
 
 | Stage | Output | Purpose |
 |-------|--------|---------|
-| Analysis | `spec-*.md` | Study target, produce functional specs |
-| Compliance | Updates `spec-*.md` in-place | Audit specs for copyright violations |
-| Implementation | Source, tests, `IMPLEMENTATION_NOTES.md` | Implement from specs only (non-interactive) |
-| Debug | `debug.md` | Interactive bug fixing session |
+| Analysis | `spec-*.md` | Study target, produce functional specs (non-interactive) |
+| Compliance | Updates `spec-*.md` in-place | Audit specs for copyright violations (non-interactive) |
+| Implementation Prep | `IMPLEMENTATION.md`, `debug.md` | Write implementation prompt with built-in debug mode for manual use |
+
+Stages 1 and 2 run automatically via the configured agent. Stage 3 writes the implementation prompt to `IMPLEMENTATION.md` for you to execute manually. The implementation prompt includes a built-in debug mode — after implementation, the agent stays in a conversational loop where you describe bugs or changes and it fixes them, logging all changes to `debug.md`.
 
 ### Output Directory
 
@@ -198,12 +199,15 @@ clean-room LibFoo ./vendor/libfoo ./specs ./impl "Reimplement libfoo's public AP
 ├── spec-<component-1>.md
 ├── spec-<component-2>.md
 ├── ...
+├── IMPLEMENTATION.md
+├── IMPLEMENTATION_NOTES.md
 └── debug.md
 
 <implementation-directory>/
-├── (source files)
-├── (test files)
-└── IMPLEMENTATION_NOTES.md
+└── (source files)
+
+<test-directory>/
+└── (test files)
 ```
 
 ### Exit Codes

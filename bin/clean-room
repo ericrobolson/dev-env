@@ -13,14 +13,15 @@ else
 fi
 
 # Input validation
-validate_args_min 5 "clean-room <feature-name> <target-directory> <spec-output-directory> <implementation-directory> <prompt>" "$@" || exit 1
+validate_args_min 6 "clean-room <feature-name> <target-directory> <spec-output-directory> <implementation-directory> <test-directory> <prompt>" "$@" || exit 1
 
 # Arguments
 FEATURE_NAME="$1"
 TARGET_DIR="${2%/}"
 SPEC_DIR="${3%/}"
 IMPL_DIR="${4%/}"
-shift 4
+TEST_DIR="${5%/}"
+shift 5
 PROMPT="$@"
 
 # Initialize globals
@@ -41,9 +42,9 @@ if [[ -z "$(ls -A "$TARGET_DIR" 2>/dev/null)" ]]; then
 fi
 
 # Create output directories
-mkdir -p "$SPEC_DIR" "$IMPL_DIR"
+mkdir -p "$SPEC_DIR" "$IMPL_DIR" "$TEST_DIR"
 
-echo "==> Clean Room ($FEATURE_NAME): target=$TARGET_DIR specs=$SPEC_DIR impl=$IMPL_DIR"
+echo "==> Clean Room ($FEATURE_NAME): target=$TARGET_DIR specs=$SPEC_DIR impl=$IMPL_DIR tests=$TEST_DIR"
 
 #
 # Stage 1: Dirty Room Analysis
@@ -134,8 +135,10 @@ Read all spec-*.md files in '$SPEC_DIR'. These are your sole source of truth.
 - Source code implementing the described behavior
 - Modular code wherever possible.
 - Implement a simple, robust, clean, and readable solution that is easy to maintain and extend.
-- Unit tests covering the inputs, outputs, behavior, and edge cases listed in the specs
 - An IMPLEMENTATION_NOTES.md in '$SPEC_DIR' noting any spec ambiguities and the choices you made
+
+**Produce in '$TEST_DIR':**
+- Unit tests covering the inputs, outputs, behavior, and edge cases listed in the specs
 
 **After implementation:**
 - Run all tests and confirm they pass
