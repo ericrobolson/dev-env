@@ -8,6 +8,7 @@ A reproducible development environment with AI-assisted feature building tools.
 |------|---------|
 | `gen-doc` | Single-prompt AI task runner. Used for building out markdown files. |
 | `build-feature` | Multi-stage feature development pipeline |
+| `clean-room` | Clean-room reverse engineering pipeline |
 
 ---
 
@@ -156,6 +157,61 @@ After each stage (cursor agent mode):
 |------|---------|
 | 0 | All stages complete |
 | 1 | Missing arguments or stage failure |
+
+---
+
+## Usage: clean-room
+
+Clean-room reverse engineering pipeline. Analyzes a target system, produces functional specs, reviews for compliance, implements from specs only, and enters a debug session.
+
+### Syntax
+
+```bash
+clean-room <feature-name> <target-directory> <spec-output-directory> <implementation-directory> <prompt>
+```
+
+### Example
+
+```bash
+clean-room LibFoo ./vendor/libfoo ./specs ./impl "Reimplement libfoo's public API"
+```
+
+### Pipeline Stages
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│ 1. Analysis │───▶│2. Compliance│───▶│ 3. Implement│───▶│  4. Debug   │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+```
+
+| Stage | Output | Purpose |
+|-------|--------|---------|
+| Analysis | `spec-*.md` | Study target, produce functional specs |
+| Compliance | Updates `spec-*.md` in-place | Audit specs for copyright violations |
+| Implementation | Source, tests, `IMPLEMENTATION_NOTES.md` | Implement from specs only (non-interactive) |
+| Debug | `debug.md` | Interactive bug fixing session |
+
+### Output Directory
+
+```
+<spec-output-directory>/YYMMDDHHMM-<feature-name>/
+├── spec-<component-1>.md
+├── spec-<component-2>.md
+├── ...
+└── debug.md
+
+<implementation-directory>/
+├── (source files)
+├── (test files)
+└── IMPLEMENTATION_NOTES.md
+```
+
+### Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | All stages complete |
+| 1 | Missing arguments, invalid target dir, or stage failure |
 
 ---
 

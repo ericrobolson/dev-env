@@ -1,0 +1,160 @@
+#!/bin/bash
+
+# Clean Room Implementation Tool
+# Automates clean-room reverse engineering: analyze → compliance → implement → debug
+
+# Source shared helpers
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/helpers.sh" ]]; then
+    source "$SCRIPT_DIR/helpers.sh"
+else
+    echo "Error: helpers.sh not found at $SCRIPT_DIR/helpers.sh" >&2
+    exit 1
+fi
+
+# Input validation
+validate_args_min 5 "clean-room <feature-name> <target-directory> <spec-output-directory> <implementation-directory> <prompt>" "$@" || exit 1
+
+# Arguments
+FEATURE_NAME="$1"
+TARGET_DIR="${2%/}"
+SPEC_DIR="${3%/}"
+IMPL_DIR="${4%/}"
+shift 4
+PROMPT="$@"
+
+# Initialize globals
+init_globals || exit 1
+
+# Build timestamped spec directory (like build-feature)
+SPEC_DIR="$SPEC_DIR/$TIME_STAMP-$FEATURE_NAME"
+
+# Validate target directory
+if [[ ! -d "$TARGET_DIR" ]]; then
+    echo "Error: Target directory does not exist: $TARGET_DIR" >&2
+    exit 1
+fi
+
+if [[ -z "$(ls -A "$TARGET_DIR" 2>/dev/null)" ]]; then
+    echo "Error: Target directory is empty: $TARGET_DIR" >&2
+    exit 1
+fi
+
+# Create output directories
+mkdir -p "$SPEC_DIR" "$IMPL_DIR"
+
+echo "==> Clean Room ($FEATURE_NAME): target=$TARGET_DIR specs=$SPEC_DIR impl=$IMPL_DIR"
+
+#
+# Stage 1: Dirty Room Analysis
+#
+STAGE="analysis"
+ANALYSIS_PROMPT="You are a dirty room analyst performing clean-room reverse engineering. Your job is to study the target system and produce functional specifications that describe **what** it does — never **how** the original code does it.
+
+The target system is in: '$TARGET_DIR'
+
+Additional context from the user:
+$PROMPT
+
+**Rules:**
+- Never include, reference, or paraphrase original source code
+- Describe observable behavior, inputs, outputs, interfaces, and algorithms in your own words
+- Each distinct component, module, or feature gets its own markdown file
+- Use the naming convention: spec-<component-name>.md
+
+**For each component, output a markdown file in '$SPEC_DIR' containing:**
+- **Name:** component identifier
+- **Purpose:** what it does in one sentence
+- **Inputs:** what it accepts (formats, types, ranges)
+- **Outputs:** what it produces (formats, types, ranges)
+- **Behavior:** step-by-step description of observable functionality
+- **Interfaces:** how it interacts with other components
+- **Edge cases:** known boundary conditions and expected behavior
+- **Constraints:** performance, size, timing, or protocol requirements
+
+Study the target system now and produce one spec file per component.
+
+$TERSENESS"
+
+echo "$ANALYSIS_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
+
+#
+# Stage 2: Compliance Review (in-place)
+#
+STAGE="compliance"
+
+SPEC_FILES=$(ls "$SPEC_DIR"/spec-*.md 2>/dev/null)
+if [[ -z "$SPEC_FILES" ]]; then
+    echo "Error: No spec files found in $SPEC_DIR" >&2
+    exit 1
+fi
+
+COMPLIANCE_PROMPT="You are a clean-room compliance reviewer. Your job is to audit functional specifications and fix any content that could constitute copyright infringement.
+
+Read all spec-*.md files in '$SPEC_DIR'.
+
+**Review each spec file for:**
+- Direct copies or close paraphrases of original source code
+- Variable names, function names, or identifiers lifted from the original
+- Code snippets, pseudocode, or logic structures that mirror the original implementation rather than describing observable behavior
+- Comments or descriptions that reveal knowledge of internal implementation details rather than external behavior
+- Proprietary terminology unique to the original codebase
+
+**For each violation found:**
+- Rewrite the offending section directly in the spec file with a clean description
+- If it's an edge case, list it out but make it generic and don't reference the original codebase.
+
+Do NOT create separate compliance files. Edit the spec files in place.
+
+$TERSENESS"
+
+echo "$COMPLIANCE_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
+
+#
+# Stage 3: Clean Room Implementation (non-interactive)
+#
+STAGE="implementation"
+DEBUG_FILE=$(new_doc "$SPEC_DIR" "debug.md")
+IMPLEMENTATION_PROMPT="You are an implementation engineer. Your only input is the functional specifications provided.
+You are an expert at software development, project management, architecture and design.
+You prefer simple, robust solutions that are easy to maintain and extend.
+Make code modular wherever possible.
+
+Read all spec-*.md files in '$SPEC_DIR'. These are your sole source of truth.
+
+**Rules:**
+- Use only the spec files as your source of truth
+- Choose your own variable names, function names, data structures, and code organization
+- Choose the simplest, most idiomatic approach for the target language
+- If the spec is ambiguous, document your interpretation and make a reasonable choice
+- Focus on simple, modular solutions
+- You prefer simple, robust solutions that are easy to maintain and extend
+
+**Produce in '$IMPL_DIR':**
+- Source code implementing the described behavior
+- Modular code wherever possible.
+- Implement a simple, robust, clean, and readable solution that is easy to maintain and extend.
+- Unit tests covering the inputs, outputs, behavior, and edge cases listed in the specs
+- An IMPLEMENTATION_NOTES.md in '$SPEC_DIR' noting any spec ambiguities and the choices you made
+
+**After implementation:**
+- Run all tests and confirm they pass
+- Verify the implementation satisfies every item in each spec's Behavior section
+- Flag any spec requirements you could not fulfill and explain why
+
+From this point forward, you will enter debug mode.
+
+The user will describe bugs, issues, or changes they want to make found after implementation.
+Fix each item as described.
+
+Write all conversation output, including what was changed and why, to '$DEBUG_FILE'.
+Each interaction should be recorded in '$DEBUG_FILE'."
+
+
+IMPL_PROMPT_FILE=$(new_doc "$SPEC_DIR" "IMPLEMENTATION.md")
+echo "$IMPLEMENTATION_PROMPT" > "$IMPL_PROMPT_FILE"
+echo "==> Implementation prompt written to $IMPL_PROMPT_FILE
+
+If possible, play an audio notification to alert me when everything is finished.
+"
+echo "==> Clean Room complete"

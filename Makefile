@@ -3,3 +3,6 @@ test-build-feature:
 
 test-gen-doc:
 	./bin/gen-doc SonataOverview Give me an overview of a sonata musical form.
+
+test-clean-room:
+	./bin/clean-room test-feature ./bin ./specs ./impl "Reimplement the helper utilities"
