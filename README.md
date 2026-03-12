@@ -45,22 +45,23 @@ A reproducible development environment with AI-assisted feature building tools.
    git clone <repo-url> ~/dev/dev-env
    ```
 
-2. Add shell functions to `~/.zshrc` or `~/.bashrc`:
-(assume installed at ~/dev/dev-env for the following examples)
+2. Add shell functions to `~/.zshrc` or `~/.bashrc` (assumes installed at `~/dev/dev-env`):
 
    ```bash
-   
    build-feature() {
        ~/dev/dev-env/bin/build-feature "$@"
    }
    export -f build-feature
-  ```bash
 
-  ```bash
-  gen-doc() {
-      ~/dev/dev-env/bin/gen-doc "$@"
-  }
-  export -f gen-doc
+   clean-room() {
+       ~/dev/dev-env/bin/clean-room "$@"
+   }
+   export -f clean-room
+
+   gen-doc() {
+       ~/dev/dev-env/bin/gen-doc "$@"
+   }
+   export -f gen-doc
    ```
 
 3. Reload shell:
@@ -88,9 +89,7 @@ gen-doc SonataOverview "Write up an overview of the sonata form"
 
 ### Output
 
-- Creates: `docs/YYMMDDHHMM-<doc-name>.md`
-- Opens file in Cursor IDE
-- Plays audio notification
+- Creates: `YYMMDDHHMM-<doc-name>.md` in the current directory
 
 ### Exit Codes
 
@@ -120,18 +119,19 @@ build-feature UserAuth docs "Build user authentication with OAuth2"
 ### Pipeline Stages
 
 ```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  1. Design  │───▶│ 2. Research │───▶│   3. Plan   │───▶│ 4. Checklist│───▶│ 5. Implement│
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  1. Design  │───▶│ 2. Research │───▶│   3. Plan   │───▶│ 4. Checklist│───▶│ 5. Implement│───▶│  6. Debug   │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
 ```
 
 | Stage | Output File | Purpose |
-|-------|-------------|-------|
-| Design | `01-design.md` | Design the feature |
-| Research | `02-research.md` | Research the feature |
-| Plan | `03-plan.md` | Plan the feature |
-| Checklist | `04-checklist.md` | Create a checklist of tasks to complete the feature |
-| Implementation | (modifies codebase) | Implement the feature |
+|-------|-------------|---------|
+| Design | `01-design.md` | Product discovery, requirements, user flows (happy and unhappy paths) |
+| Research | `02-research.md` | Deep research on each element, prior art, relevant files in repo |
+| Plan | `03-plan.md` | Detailed implementation plan with code snippets |
+| Checklist | `04-checklist.md` | Task checklist appended to the plan file |
+| Implementation | (modifies codebase) | Implement the plan (non-interactive) |
+| Debug | `05-debug.md` | Interactive debug session to fix post-implementation issues |
 
 ### Output Directory
 
@@ -140,16 +140,19 @@ build-feature UserAuth docs "Build user authentication with OAuth2"
 ├── 01-design.md
 ├── 02-research.md
 ├── 03-plan.md
-└── 04-checklist.md
+├── 04-checklist.md
+└── 05-debug.md
 ```
 
 ### Interactive Flow
 
-After each stage (cursor agent mode):
+After stages 1–4:
 1. File opens in IDE/displays file name
 2. Audio notification plays
 3. Script prompts: "Continue? (y/n)" to move to next stage
 4. Enter `y` or `yes` to proceed
+
+Stage 5 (Implementation) runs non-interactively. Stage 6 (Debug) starts an interactive session where you describe bugs or changes and the agent fixes them, logging all changes to `05-debug.md`.
 
 ### Exit Codes
 
