@@ -17,18 +17,25 @@ else
 fi
 
 # Input validation
-validate_args_min 2 "gen-doc <doc-name> <prompt>" "$@" || exit 1
+validate_args_min 3 "gen-doc <doc-name> <doc-directory> <prompt>" "$@" || exit 1
 
 # Arguments
 DOC_NAME="$1"
-shift
+DOC_DIRECTORY="${2%/}"
+shift 2
 PROMPT="$@"
 
 # Initialize globals
 init_globals || exit 1
 
+# Build full directory path with timestamp
+DOC_DIRECTORY="$DOC_DIRECTORY/$TIME_STAMP-$DOC_NAME"
+
+# Create directory
+mkdir -p "$DOC_DIRECTORY"
+
 # Build output path
-FILE_PATH="$TIME_STAMP-$DOC_NAME.md"
+FILE_PATH="$DOC_DIRECTORY/DOCUMENT.md"
 
 echo "==> File path: $FILE_PATH"
 

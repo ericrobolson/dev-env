@@ -6,7 +6,7 @@ A reproducible development environment with AI-assisted feature building tools.
 
 | Tool | Purpose |
 |------|---------|
-| `gen-doc` | Single-prompt AI task runner. Used for building out markdown files. |
+| `gen-doc` | Single-prompt document generator. Creates structured markdown documents in a timestamped directory. |
 | `build-feature` | Multi-stage feature development pipeline |
 | `clean-room` | Clean-room reverse engineering pipeline |
 
@@ -73,23 +73,26 @@ A reproducible development environment with AI-assisted feature building tools.
 
 ## Usage: gen-doc
 
-Quick, single-prompt AI task runner.
+Single-prompt document generator. Creates a markdown document in a timestamped directory.
 
 ### Syntax
 
 ```bash
-gen-doc <doc-name> <prompt>
+gen-doc <doc-name> <doc-directory> <prompt>
 ```
 
 ### Example
 
 ```bash
-gen-doc SonataOverview "Write up an overview of the sonata form"
+gen-doc SonataOverview docs "Write up an overview of the sonata form"
 ```
 
-### Output
+### Output Directory
 
-- Creates: `YYMMDDHHMM-<doc-name>.md` in the current directory
+```
+<doc-directory>/YYMMDDHHMM-<doc-name>/
+└── DOCUMENT.md
+```
 
 ### Exit Codes
 
