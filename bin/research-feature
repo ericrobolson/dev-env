@@ -1,0 +1,140 @@
+#!/bin/bash
+
+# HN-Powered Feature Research Pipeline
+# Agent handles HTTP calls, JSON parsing, and summarization directly.
+
+# Source shared helpers
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/helpers.sh" ]]; then
+    source "$SCRIPT_DIR/helpers.sh"
+else
+    echo "Error: helpers.sh not found at $SCRIPT_DIR/helpers.sh" >&2
+    exit 1
+fi
+
+# Input validation
+validate_args_min 3 "research-feature <feature-name> <doc-directory> <prompt>" "$@" || exit 1
+
+# Arguments
+FEATURE_NAME="$1"
+DOC_DIRECTORY="${2%/}"
+shift 2
+PROMPT="$@"
+
+# Sanitize text into a filesystem-safe slug
+sanitize_slug() {
+    echo "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/-\{2,\}/-/g; s/^-//; s/-$//' | cut -c1-60
+}
+
+# Initialize globals
+init_globals || exit 1
+
+FEATURE_SLUG=$(sanitize_slug "$FEATURE_NAME")
+RESEARCH_DIR="docs/${TIME_STAMP}-${FEATURE_SLUG}-research"
+mkdir -p "$RESEARCH_DIR"
+
+echo "==> Researching feature: $FEATURE_NAME"
+
+# =============================================================================
+# Stage 1: HN Search, Article Retrieval & Analysis
+# =============================================================================
+STAGE="hn-research"
+
+SEARCH_PROMPT="You are a research assistant. You have been given a feature description to research.
+
+Feature description:
+$PROMPT
+
+Do the following:
+
+1. Based on the feature description, come up with 3 relevant search queries for Hacker News.
+
+2. For each query, use curl to search the Hacker News Algolia API:
+   curl -s 'https://hn.algolia.com/api/v1/search?query=<URL-ENCODED-QUERY>&tags=story&numericFilters=num_comments%3E10&hitsPerPage=5'
+
+3. From the combined results across all queries, pick the top 6 most relevant stories by points (deduplicate by objectID).
+
+4. For each story:
+   a. Get the title, url, and objectID from the hit.
+   b. Sanitize the title into a lowercase hyphenated slug (max 60 chars, only a-z0-9 and hyphens).
+   c. If the story has a url, fetch it with curl -sL (follow redirects, User-Agent header) and save the HTML to:
+      ${RESEARCH_DIR}/<title-slug>.html
+   d. Fetch the HN comments page (https://news.ycombinator.com/item?id=<objectID>) and save the HTML to:
+      ${RESEARCH_DIR}/<title-slug>--comments.html
+   e. If the story has no external url, fetch the HN comments page for both files.
+   f. If a fetch fails or returns very little content (<100 chars), log a warning but continue.
+
+5. After fetching, for each HTML file you saved, perform a deep analysis:
+   - Read the HTML file closely and carefully — do not skim
+   - Write a detailed markdown analysis to the same path but with .md extension instead of .html
+
+   For article HTML files, your markdown MUST include:
+   - **Core argument/thesis**: What is the author's central claim or contribution?
+   - **Technical details**: Every architecture decision, algorithm, data structure, protocol, library, or tool mentioned — with specifics (versions, benchmarks, trade-offs, config)
+   - **Code snippets**: Preserve ALL code examples exactly as written, with surrounding context explaining what they do
+   - **Performance data**: Any benchmarks, latency numbers, throughput stats, or scaling characteristics
+   - **Failure modes**: What went wrong, what pitfalls the author encountered, what they'd do differently
+   - **Links and references**: Every URL, paper, repo, or resource mentioned
+   - **Surprising or non-obvious insights**: Anything a practitioner would find valuable that isn't common knowledge
+
+   For HN comments HTML files, your markdown MUST include:
+   - **Top technical insights**: Specific technical points raised by commenters, especially from practitioners with direct experience
+   - **Alternative approaches**: Different tools, libraries, architectures, or strategies commenters suggest
+   - **War stories**: Real-world experiences, production incidents, migration stories, or deployment lessons shared
+   - **Disagreements and debates**: Where commenters disagree with the article or each other — capture both sides
+   - **Gotchas and warnings**: Specific pitfalls, edge cases, or 'watch out for X' advice
+   - **Recommended resources**: Any links, papers, repos, or tools commenters share
+   - **Community consensus**: Where there is clear agreement or strong sentiment on a point
+
+6. Finally, read all the .md files you wrote in ${RESEARCH_DIR}/ and generate a summary file at ${RESEARCH_DIR}/SUMMARY.md containing:
+   - Key themes and patterns across all articles
+   - Relevant technical approaches mentioned
+   - Community sentiment and common pain points
+   - Links to source article files
+
+Do all of this. Do not ask questions. Do not explain what you're doing.
+
+$TERSENESS"
+
+echo "$SEARCH_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
+
+# Open research directory in IDE for review
+$IDE "$RESEARCH_DIR"
+
+# =============================================================================
+# Stage 2: Master Summary + User Review
+# =============================================================================
+STAGE="master-summary"
+ENRICHED_PROMPT_FILE="$RESEARCH_DIR/ENRICHED-PROMPT.md"
+
+SUMMARY_FILE="$RESEARCH_DIR/SUMMARY.md"
+if [[ ! -f "$SUMMARY_FILE" ]]; then
+    echo "Error: No research summary found. Agent may have failed to produce results." >&2
+    exit 1
+fi
+
+MASTER_PROMPT="You are a research synthesizer.
+Read the summary file: $SUMMARY_FILE
+Also read any other .md files in $RESEARCH_DIR/ for additional detail.
+
+Generate an enriched feature prompt in '$ENRICHED_PROMPT_FILE' that combines:
+1. The original user prompt: $PROMPT
+2. Key research findings distilled from the research
+3. Recommended approaches based on HN community insights
+
+Format it as a ready-to-use prompt for build-feature. Keep it focused and actionable.
+
+$TERSENESS"
+
+echo "$MASTER_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
+
+# Open enriched prompt in IDE for review
+$IDE "$ENRICHED_PROMPT_FILE"
+
+echo ""
+echo "==> Research complete. Review enriched prompt:"
+echo "    $ENRICHED_PROMPT_FILE"
+echo ""
+echo "To proceed: bin/build-feature $FEATURE_NAME $DOC_DIRECTORY \"\$(cat $ENRICHED_PROMPT_FILE)\""
+
+wait_for_user "$ENRICHED_PROMPT_FILE"

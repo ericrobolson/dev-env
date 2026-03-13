@@ -14,3 +14,4 @@ A list of items to work on.
 - [ ] Fix `Continue? (y/n)` prompt to be more user friendly. In reality it should only continue if prompt is y|yes|Y|Yes|YES. Otherwise it should prompt the user to enter 'y' or 'n' when ready.
 - [ ] Add splitting of logs to a file for post-mortem analysis. Use `tee` to split logs to a file and stdout.
 - [ ] Add message to final prompt if they're in interactive mode to exit to continue to next stage.
+- [ ] Add cleanup mechanism for old `docs/research/` files

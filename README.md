@@ -9,6 +9,7 @@ A reproducible development environment with AI-assisted feature building tools.
 | `gen-doc` | Single-prompt AI task runner. Used for building out markdown files. |
 | `build-feature` | Multi-stage feature development pipeline |
 | `clean-room` | Clean-room reverse engineering pipeline |
+| `research-feature` | HN-powered feature research pipeline |
 
 ---
 
@@ -62,6 +63,11 @@ A reproducible development environment with AI-assisted feature building tools.
        ~/dev/dev-env/bin/gen-doc "$@"
    }
    export -f gen-doc
+
+   research-feature() {
+       ~/dev/dev-env/bin/research-feature "$@"
+   }
+   export -f research-feature
    ```
 
 3. Reload shell:
@@ -219,6 +225,62 @@ Stages 1 and 2 run automatically via the configured agent. Stage 3 writes the im
 |------|---------|
 | 0 | All stages complete |
 | 1 | Missing arguments, invalid target dir, or stage failure |
+
+---
+
+## Usage: research-feature
+
+HN-powered feature research pipeline. Searches Hacker News for relevant articles, summarizes findings, and generates an enriched prompt for `build-feature`.
+
+### Syntax
+
+```bash
+research-feature <feature-name> <doc-directory> <prompt>
+```
+
+### Example
+
+```bash
+research-feature CollabEditor docs "Build a real-time collaborative editor"
+```
+
+### Prerequisites
+
+Python 3 (preinstalled on macOS). No additional dependencies.
+
+### Pipeline Stages
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│ 1. Keywords │───▶│ 2. HN Fetch │───▶│ 3. Summarize│───▶│ 4. Enrich   │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+```
+
+| Stage | Output | Purpose |
+|-------|--------|---------|
+| Keyword Extraction | (internal) | Extract 3 search keywords from prompt |
+| HN Search & Fetch | `*.html` files | Fetch top HN articles and comments per keyword |
+| Summarization | `*.md`, `*-SUMMARY.md` | Agent summarizes HTML to markdown, then per-keyword summaries |
+| Master Summary | `ENRICHED-PROMPT.md` | Synthesize research into enriched prompt for `build-feature` |
+
+### Output Directory
+
+```
+docs/research/
+├── <keyword>--<article-title>.html
+├── <keyword>--<article-title>.md
+├── <keyword>--<article-title>--comments.html
+├── <keyword>--<article-title>--comments.md
+├── <keyword>-SUMMARY.md
+└── ENRICHED-PROMPT.md
+```
+
+### Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | All stages complete |
+| 1 | Missing arguments, no keywords extracted, no results found, or stage failure |
 
 ---
 
