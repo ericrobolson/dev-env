@@ -34,6 +34,8 @@ DOC_DIRECTORY="$DOC_DIRECTORY/$TIME_STAMP-$DOC_NAME"
 # Create directory
 mkdir -p "$DOC_DIRECTORY"
 
+PROMPTS_FILE="$DOC_DIRECTORY/00-prompts.md"
+
 # Build output path
 FILE_PATH="$DOC_DIRECTORY/DOCUMENT.md"
 
@@ -46,4 +48,7 @@ You are tasked to work on $DOC_NAME.
 $PROMPT"
 
 
- build_prompt "$FILE_PATH" "$FULL_PROMPT" | run_agent "generate" || exit 1
+FINAL_PROMPT=$(build_prompt "$FILE_PATH" "$FULL_PROMPT")
+append_prompt "$PROMPTS_FILE" "Generate" "$FINAL_PROMPT"
+echo "$FINAL_PROMPT" | run_agent "generate" || exit 1
+append_resume "$PROMPTS_FILE"

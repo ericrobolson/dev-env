@@ -44,6 +44,8 @@ fi
 # Create output directories
 mkdir -p "$SPEC_DIR" "$IMPL_DIR" "$TEST_DIR"
 
+PROMPTS_FILE="$SPEC_DIR/00-prompts.md"
+
 echo "==> Clean Room ($FEATURE_NAME): target=$TARGET_DIR specs=$SPEC_DIR impl=$IMPL_DIR tests=$TEST_DIR"
 
 #
@@ -77,7 +79,9 @@ Study the target system now and produce one spec file per component.
 
 $TERSENESS"
 
+append_prompt "$PROMPTS_FILE" "Analysis" "$ANALYSIS_PROMPT"
 echo "$ANALYSIS_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
+append_resume "$PROMPTS_FILE"
 
 #
 # Stage 2: Compliance Review (in-place)
@@ -109,7 +113,9 @@ Do NOT create separate compliance files. Edit the spec files in place.
 
 $TERSENESS"
 
+append_prompt "$PROMPTS_FILE" "Compliance" "$COMPLIANCE_PROMPT"
 echo "$COMPLIANCE_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
+append_resume "$PROMPTS_FILE"
 
 #
 # Stage 3: Clean Room Implementation (non-interactive)
@@ -154,6 +160,7 @@ Write all conversation output, including what was changed and why, to '$DEBUG_FI
 Each interaction should be recorded in '$DEBUG_FILE'."
 
 
+append_prompt "$PROMPTS_FILE" "Implementation" "$IMPLEMENTATION_PROMPT"
 IMPL_PROMPT_FILE=$(new_doc "$SPEC_DIR" "IMPLEMENTATION.md")
 echo "$IMPLEMENTATION_PROMPT" > "$IMPL_PROMPT_FILE"
 echo "==> Implementation prompt written to $IMPL_PROMPT_FILE

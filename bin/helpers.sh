@@ -134,3 +134,68 @@ Then open the file '$filepath' in the IDE '$IDE' so I can review it.
 
 If possible, play an audio notification to alert me that the file is ready to review."
 }
+
+# append_prompt: Log a prompt to a markdown file
+# Usage: append_prompt <filepath> <stage_name> <prompt_text>
+# Non-critical — warns on failure, never exits
+append_prompt() {
+    local filepath="$1"
+    local stage_name="$2"
+    local prompt_text="$3"
+
+    # Create file with header if it doesn't exist
+    if [[ ! -f "$filepath" ]]; then
+        printf '# Prompts\n\n' > "$filepath" 2>/dev/null || {
+            echo "Warning: Could not create prompt log: $filepath" >&2
+            return 0
+        }
+    fi
+
+    # Append stage section with 4-backtick fence
+    {
+        printf '## %s\n\n' "$stage_name"
+        printf '````\n'
+        printf '%s\n' "$prompt_text"
+        printf '````\n\n'
+    } >> "$filepath" 2>/dev/null || {
+        echo "Warning: Could not write to prompt log: $filepath" >&2
+    }
+
+    return 0
+}
+
+# append_resume: Log the claude resume command to the prompts file
+# Usage: append_resume <prompts_file>
+# Finds the most recent claude session for the current project and appends the resume command.
+# Non-critical — silently does nothing if session not found.
+append_resume() {
+    local prompts_file="$1"
+
+    # Only applicable for claude agent
+    if [[ "$AGENT_TYPE" != "claude" ]]; then
+        return 0
+    fi
+
+    # Derive claude project directory from cwd
+    local claude_project_dir="$HOME/.claude/projects/$(pwd | sed 's|/|-|g')"
+
+    # Find most recent .jsonl session file
+    local latest
+    latest=$(ls -t "$claude_project_dir"/*.jsonl 2>/dev/null | head -1)
+
+    if [[ -z "$latest" ]]; then
+        return 0
+    fi
+
+    # Extract session ID from filename
+    local session_id
+    session_id=$(basename "$latest" .jsonl)
+
+    # Append resume command to prompts file
+    {
+        printf '> To resume this session, run:\n'
+        printf '> `claude --resume %s`\n\n' "$session_id"
+    } >> "$prompts_file" 2>/dev/null
+
+    return 0
+}

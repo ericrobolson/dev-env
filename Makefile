@@ -6,3 +6,6 @@ test-gen-doc:
 
 test-clean-room:
 	./bin/clean-room test-feature ./bin ./specs ./impl "Reimplement the helper utilities"
+
+test-append-prompt:
+	bash tests/test-append-prompt.sh

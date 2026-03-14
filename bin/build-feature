@@ -39,6 +39,8 @@ DOC_DIRECTORY="$DOC_DIRECTORY/$TIME_STAMP-$FEATURE_NAME"
 # Create directory
 mkdir -p "$DOC_DIRECTORY"
 
+PROMPTS_FILE="$DOC_DIRECTORY/00-prompts.md"
+
 echo "==> Creating feature: $FEATURE_NAME in $DOC_DIRECTORY"
 
 #
@@ -57,7 +59,10 @@ Write out a testing plan and test cases for the feature.
 However, do not go too deep at this stage. Stick to high level details."
 
 
-build_prompt "$DESIGN_FILE" "$DESIGN_PROMPT" | run_agent "$STAGE" || exit 1
+FINAL_PROMPT=$(build_prompt "$DESIGN_FILE" "$DESIGN_PROMPT")
+append_prompt "$PROMPTS_FILE" "Design" "$FINAL_PROMPT"
+echo "$FINAL_PROMPT" | run_agent "$STAGE" || exit 1
+append_resume "$PROMPTS_FILE"
 wait_for_user "$DESIGN_FILE"
 
 #
@@ -77,7 +82,10 @@ List out any prior art and existing solutions found in the repo.
 Analyze everything in great detail, providing deep research. Go through everything.
 List out any relevant files and their file paths with a brief summary of how it is useful."
 
-build_prompt "$RESEARCH_FILE" "$RESEARCH_PROMPT" | run_agent "$STAGE" || exit 1
+FINAL_PROMPT=$(build_prompt "$RESEARCH_FILE" "$RESEARCH_PROMPT")
+append_prompt "$PROMPTS_FILE" "Research" "$FINAL_PROMPT"
+echo "$FINAL_PROMPT" | run_agent "$STAGE" || exit 1
+append_resume "$PROMPTS_FILE"
 wait_for_user "$RESEARCH_FILE"
 
 #
@@ -99,7 +107,10 @@ $RESEARCH_FILE
 Write a detailed document outlining how to implement this. include code snippets.
 Ensure that both '$DESIGN_FILE' and '$RESEARCH_FILE' are linked in the plan."
 
-build_prompt "$PLAN_FILE" "$PLAN_PROMPT" | run_agent "$STAGE" || exit 1
+FINAL_PROMPT=$(build_prompt "$PLAN_FILE" "$PLAN_PROMPT")
+append_prompt "$PROMPTS_FILE" "Plan" "$FINAL_PROMPT"
+echo "$FINAL_PROMPT" | run_agent "$STAGE" || exit 1
+append_resume "$PROMPTS_FILE"
 wait_for_user "$PLAN_FILE"
 
 #
@@ -112,7 +123,10 @@ Be clear, concise, and explicit.
 Split each task into smaller tasks if necessary.
 Append the generated checklist to the end of the content in '$PLAN_FILE'."
 
-build_prompt "$CHECKLIST_FILE" "$CHECKLIST_PROMPT" | run_agent "$STAGE" || exit 1
+FINAL_PROMPT=$(build_prompt "$CHECKLIST_FILE" "$CHECKLIST_PROMPT")
+append_prompt "$PROMPTS_FILE" "Checklist" "$FINAL_PROMPT"
+echo "$FINAL_PROMPT" | run_agent "$STAGE" || exit 1
+append_resume "$PROMPTS_FILE"
 wait_for_user "$CHECKLIST_FILE"
 
 #
@@ -128,8 +142,9 @@ Implement the following plan document in '$CHECKLIST_FILE'.
 If possible, play an audio notification to alert me when everything is finished."
 
 echo "Building code..."
+append_prompt "$PROMPTS_FILE" "Implementation" "$IMPLEMENTATION_PROMPT"
 echo "$IMPLEMENTATION_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
-
+append_resume "$PROMPTS_FILE"
 
 echo "==> Implementation completed"
 
@@ -157,5 +172,7 @@ Write all conversation output, including what was changed and why, to '$DEBUG_FI
 Each interaction should be recorded in '$DEBUG_FILE'."
 
 echo "==> Starting debug session. Describe bugs to fix. Output: $DEBUG_FILE"
+append_prompt "$PROMPTS_FILE" "Debug" "$DEBUG_PROMPT"
 echo "$DEBUG_PROMPT" | run_agent "$STAGE" || exit 1
+append_resume "$PROMPTS_FILE"
 echo "==> Debug session completed"
