@@ -157,14 +157,13 @@ The user will describe bugs, issues, or changes they want to make found after im
 Fix each item as described.
 
 Write all conversation output, including what was changed and why, to '$DEBUG_FILE'.
-Each interaction should be recorded in '$DEBUG_FILE'."
+Each interaction should be recorded in '$DEBUG_FILE'.
+
+When finished, run '$(play_sound)' to play an audio notification."
 
 
 append_prompt "$PROMPTS_FILE" "Implementation" "$IMPLEMENTATION_PROMPT"
 IMPL_PROMPT_FILE=$(new_doc "$SPEC_DIR" "IMPLEMENTATION.md")
 echo "$IMPLEMENTATION_PROMPT" > "$IMPL_PROMPT_FILE"
-echo "==> Implementation prompt written to $IMPL_PROMPT_FILE
-
-If possible, play an audio notification to alert me when everything is finished.
-"
+echo "==> Implementation prompt written to $IMPL_PROMPT_FILE"
 echo "==> Clean Room complete"

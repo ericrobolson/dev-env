@@ -42,10 +42,13 @@ FILE_PATH="$DOC_DIRECTORY/DOCUMENT.md"
 echo "==> File path: $FILE_PATH"
 
 # Build and execute prompt
+PLAY_SOUND=$(play_sound)
 FULL_PROMPT="You prefer simple, robust solutions that are easy to maintain and extend.
 You are tasked to work on $DOC_NAME.
 
-$PROMPT"
+$PROMPT
+
+When finished, run '$PLAY_SOUND' to play an audio notification."
 
 
 FINAL_PROMPT=$(build_prompt "$FILE_PATH" "$FULL_PROMPT")

@@ -1,0 +1,21 @@
+#!/bin/bash
+# Play a system notification sound. Non-fatal — always exits 0.
+
+if [[ "${SILENT:-}" == "1" ]]; then
+    exit 0
+fi
+
+SOUND="${SOUND:-/System/Library/Sounds/Glass.aiff}"
+
+if ! command -v afplay &>/dev/null; then
+    echo "Warning: afplay not found, skipping audio notification" >&2
+    exit 0
+fi
+
+if [[ ! -f "$SOUND" ]]; then
+    echo "Warning: Sound file not found: $SOUND" >&2
+    exit 0
+fi
+
+afplay "$SOUND" &
+exit 0

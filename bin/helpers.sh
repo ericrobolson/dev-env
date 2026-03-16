@@ -130,9 +130,19 @@ $TERSENESS
 
 Output everything to the file '$filepath'.
 
-Then open the file '$filepath' in the IDE '$IDE' so I can review it.
+Then open the file '$filepath' in the IDE '$IDE' so I can review it."
+}
 
-If possible, play an audio notification to alert me that the file is ready to review."
+# get_bin_dir: Return the absolute path to the bin/ directory where helpers.sh lives.
+# Usage: BIN_DIR=$(get_bin_dir)
+get_bin_dir() {
+    cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
+}
+
+# play_sound: Return the absolute path to the play-sound script.
+# Usage: PLAY_SOUND=$(play_sound)
+play_sound() {
+    echo "$(get_bin_dir)/play-sound"
 }
 
 # append_prompt: Log a prompt to a markdown file

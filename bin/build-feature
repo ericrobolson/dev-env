@@ -139,13 +139,14 @@ wait_for_user "$CHECKLIST_FILE"
 # Stage 5: Implementation
 #
 STAGE="implementation"
+PLAY_SOUND=$(play_sound)
 IMPLEMENTATION_PROMPT="You are an expert at software development, project management, architecture and design.
 You prefer simple, robust solutions that are easy to maintain and extend.
 Make code modular wherever possible.
 You are tasked to work on $FEATURE_NAME.
 Implement the following plan document in '$CHECKLIST_FILE'.
 
-If possible, play an audio notification to alert me when everything is finished."
+When finished, run '$PLAY_SOUND' to play an audio notification."
 
 echo "Building code..."
 append_prompt "$PROMPTS_FILE" "Implementation" "$IMPLEMENTATION_PROMPT"
@@ -207,7 +208,9 @@ fi)
 If the diff is large, summarize at a high level (files changed, nature of changes).
 Do not include the contents of '00-prompts.md'.
 
-Write a high-level feature summary at the top (what was built and why)."
+Write a high-level feature summary at the top (what was built and why).
+
+When finished, run '$PLAY_SOUND' to play an audio notification."
 
 echo "==> Generating pipeline overview..."
 FINAL_PROMPT=$(build_prompt "$OVERVIEW_FILE" "$OVERVIEW_PROMPT")

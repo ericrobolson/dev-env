@@ -14,7 +14,11 @@ A list of items to work on.
 - [x] Add a \'00-prompts.md\' file to build-feature and gen-doc to store all prompts for reference/replay things. Denote each prompt by the header of the stage it is for. Append each new prompt to the file. Add a generic method in helpers.sh to append a prompt to the file/create it called \'append_prompt\'.
 - [x] Add a feature to append 'claude resume' to the 00-prompts.md file after each agent call. So it has the prompt, then the 'claude --resume 7f7c56bf-f51f-4124-b4b4-5f1ec9ff3fc9' session id after it with a note on running it to respond.
 - [x] Add a 'overview' section to the build-feature pipeline that adds a summary of all files and high level summary of the feature and the changes done.
+- [x] Split out audio playing into a script and update all prompts
+- [ ] Update the whole 'open file in ide' section to use similiar pattern to 'play-sound' and 'play_sound' where a script is defined, but the path is injected into the prompt.
+- [ ] For build-feature, make the 'unknowns' section include a suggestion in **BOLD** for ease of review
 - [ ] Make checklist stage non-interactive
+- [ ] Make ide set as env variable and if not set prompt user.
 - [ ] Remove mentions of cursor? Claude first 
 - [ ] Add a 'prompt builder' which critiques prompts and points out stuff to improve
 - [ ] Update build-feature to search for an existing 'POST-IMPLEMENTATION.md' doc and run it before the debug stage. If it doesn't exist, create one under an 'agent-rules' directory.
