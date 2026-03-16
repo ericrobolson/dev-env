@@ -41,6 +41,12 @@ mkdir -p "$DOC_DIRECTORY"
 
 PROMPTS_FILE="$DOC_DIRECTORY/00-prompts.md"
 
+# Capture git baseline ref for step 99 diff
+GIT_BASELINE_REF=""
+if git rev-parse HEAD >/dev/null 2>&1; then
+    GIT_BASELINE_REF=$(git rev-parse HEAD)
+fi
+
 echo "==> Creating feature: $FEATURE_NAME in $DOC_DIRECTORY"
 
 #
@@ -176,3 +182,36 @@ append_prompt "$PROMPTS_FILE" "Debug" "$DEBUG_PROMPT"
 echo "$DEBUG_PROMPT" | run_agent "$STAGE" || exit 1
 append_resume "$PROMPTS_FILE"
 echo "==> Debug session completed"
+
+#
+# Stage 99: Overview
+#
+STAGE="overview"
+OVERVIEW_FILE=$(new_doc "$DOC_DIRECTORY" "99-overview.md")
+OVERVIEW_PROMPT="You are an expert technical writer.
+You are tasked to write a pipeline overview for $FEATURE_NAME.
+
+Read all markdown files in '$DOC_DIRECTORY' in filename-sorted order, excluding '00-prompts.md'.
+For each file, write a concise summary.
+
+Then summarize all code changes made during this pipeline run.
+$(if [[ -n "$GIT_BASELINE_REF" ]]; then
+    echo "Run: git diff $GIT_BASELINE_REF --stat"
+    echo "Run: git diff $GIT_BASELINE_REF"
+    echo "Run: git ls-files --others --exclude-standard"
+else
+    echo "Git baseline not available. Run: git diff HEAD"
+    echo "Run: git status"
+fi)
+
+If the diff is large, summarize at a high level (files changed, nature of changes).
+Do not include the contents of '00-prompts.md'.
+
+Write a high-level feature summary at the top (what was built and why)."
+
+echo "==> Generating pipeline overview..."
+FINAL_PROMPT=$(build_prompt "$OVERVIEW_FILE" "$OVERVIEW_PROMPT")
+append_prompt "$PROMPTS_FILE" "Overview" "$FINAL_PROMPT"
+echo "$FINAL_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
+append_resume "$PROMPTS_FILE"
+echo "==> Pipeline overview generated: $OVERVIEW_FILE"

@@ -122,9 +122,9 @@ build-feature UserAuth docs "Build user authentication with OAuth2"
 ### Pipeline Stages
 
 ```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  1. Design  │───▶│ 2. Research │───▶│   3. Plan   │───▶│ 4. Checklist│───▶│ 5. Implement│───▶│  6. Debug   │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌──────────────┐
+│  1. Design  │───▶│ 2. Research │───▶│   3. Plan   │───▶│ 4. Checklist│───▶│ 5. Implement│───▶│  6. Debug   │───▶│ 99. Overview │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘    └──────────────┘
 ```
 
 | Stage | Output File | Purpose |
@@ -135,6 +135,7 @@ build-feature UserAuth docs "Build user authentication with OAuth2"
 | Checklist | `04-checklist.md` | Task checklist appended to the plan file |
 | Implementation | (modifies codebase) | Implement the plan (non-interactive) |
 | Debug | `05-debug.md` | Interactive debug session to fix post-implementation issues |
+| Overview | `99-overview.md` | Pipeline summary of all documents and code changes (non-interactive) |
 
 ### Output Directory
 
@@ -144,7 +145,8 @@ build-feature UserAuth docs "Build user authentication with OAuth2"
 ├── 02-research.md
 ├── 03-plan.md
 ├── 04-checklist.md
-└── 05-debug.md
+├── 05-debug.md
+└── 99-overview.md
 ```
 
 ### Interactive Flow
@@ -155,7 +157,7 @@ After stages 1–4:
 3. Script prompts: "Continue? (y/n)" to move to next stage
 4. Enter `y` or `yes` to proceed
 
-Stage 5 (Implementation) runs non-interactively. Stage 6 (Debug) starts an interactive session where you describe bugs or changes and the agent fixes them, logging all changes to `05-debug.md`.
+Stage 5 (Implementation) runs non-interactively. Stage 6 (Debug) starts an interactive session where you describe bugs or changes and the agent fixes them, logging all changes to `05-debug.md`. Stage 99 (Overview) runs non-interactively after debug, generating a summary of all pipeline documents and code changes.
 
 ### Exit Codes
 
