@@ -15,9 +15,9 @@ A list of items to work on.
 - [x] Add a feature to append 'claude resume' to the 00-prompts.md file after each agent call. So it has the prompt, then the 'claude --resume 7f7c56bf-f51f-4124-b4b4-5f1ec9ff3fc9' session id after it with a note on running it to respond.
 - [x] Add a 'overview' section to the build-feature pipeline that adds a summary of all files and high level summary of the feature and the changes done.
 - [x] Split out audio playing into a script and update all prompts
+- [x] Make checklist stage non-interactive
 - [ ] Update the whole 'open file in ide' section to use similiar pattern to 'play-sound' and 'play_sound' where a script is defined, but the path is injected into the prompt.
-- [ ] For build-feature, make the 'unknowns' section include a suggestion in **BOLD** for ease of review
-- [ ] Make checklist stage non-interactive
+- [ ] For build-feature, make the 'unknowns' section include a suggestion in **BOLD** for ease of review; alternatively add a **DECISION: ** option for each element in the unknowns section
 - [ ] Make ide set as env variable and if not set prompt user.
 - [ ] Remove mentions of cursor? Claude first 
 - [ ] Add a 'prompt builder' which critiques prompts and points out stuff to improve

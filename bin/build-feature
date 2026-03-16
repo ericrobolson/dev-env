@@ -48,6 +48,8 @@ if git rev-parse HEAD >/dev/null 2>&1; then
 fi
 
 echo "==> Creating feature: $FEATURE_NAME in $DOC_DIRECTORY"
+PLAY_SOUND=$(play_sound)
+
 
 #
 # Stage 1: Design
@@ -62,7 +64,9 @@ Explicitly outline any unknowns, questions, and any other details that are not c
 The most important thing is to cover the entire user flow if relevant. Otherwise ask for high level features.
 It is critical to include both the \"happy\" and \"unhappy\" flows in the design document.
 Write out a testing plan and test cases for the feature.
-However, do not go too deep at this stage. Stick to high level details."
+However, do not go too deep at this stage. Stick to high level details.
+When finished, run '$PLAY_SOUND' to play an audio notification.
+"
 
 
 FINAL_PROMPT=$(build_prompt "$DESIGN_FILE" "$DESIGN_PROMPT")
@@ -86,7 +90,9 @@ $DESIGN_FILE
 You need to research each element in depth, listing out the intricacies, challenges, and other details.
 List out any prior art and existing solutions found in the repo.
 Analyze everything in great detail, providing deep research. Go through everything.
-List out any relevant files and their file paths with a brief summary of how it is useful."
+List out any relevant files and their file paths with a brief summary of how it is useful.
+When finished, run '$PLAY_SOUND' to play an audio notification.
+"
 
 FINAL_PROMPT=$(build_prompt "$RESEARCH_FILE" "$RESEARCH_PROMPT")
 append_prompt "$PROMPTS_FILE" "Research" "$FINAL_PROMPT"
@@ -111,7 +117,9 @@ You are given the following research document to reference:
 $RESEARCH_FILE
 
 Write a detailed document outlining how to implement this. include code snippets.
-Ensure that both '$DESIGN_FILE' and '$RESEARCH_FILE' are linked in the plan."
+Ensure that both '$DESIGN_FILE' and '$RESEARCH_FILE' are linked in the plan.
+When finished, run '$PLAY_SOUND' to play an audio notification.
+"
 
 FINAL_PROMPT=$(build_prompt "$PLAN_FILE" "$PLAN_PROMPT")
 append_prompt "$PROMPTS_FILE" "Plan" "$FINAL_PROMPT"
@@ -129,26 +137,24 @@ Be clear, concise, and explicit.
 Split each task into smaller tasks if necessary.
 Append the generated checklist to the end of the content in '$PLAN_FILE'."
 
+echo "==> Generating checklist..."
 FINAL_PROMPT=$(build_prompt "$CHECKLIST_FILE" "$CHECKLIST_PROMPT")
 append_prompt "$PROMPTS_FILE" "Checklist" "$FINAL_PROMPT"
-echo "$FINAL_PROMPT" | run_agent "$STAGE" || exit 1
+echo "$FINAL_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
 append_resume "$PROMPTS_FILE"
-wait_for_user "$CHECKLIST_FILE"
 
 #
 # Stage 5: Implementation
 #
 STAGE="implementation"
-PLAY_SOUND=$(play_sound)
 IMPLEMENTATION_PROMPT="You are an expert at software development, project management, architecture and design.
 You prefer simple, robust solutions that are easy to maintain and extend.
 Make code modular wherever possible.
 You are tasked to work on $FEATURE_NAME.
 Implement the following plan document in '$CHECKLIST_FILE'.
+"
 
-When finished, run '$PLAY_SOUND' to play an audio notification."
-
-echo "Building code..."
+echo "==> Building code..."
 append_prompt "$PROMPTS_FILE" "Implementation" "$IMPLEMENTATION_PROMPT"
 echo "$IMPLEMENTATION_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
 append_resume "$PROMPTS_FILE"
@@ -176,7 +182,10 @@ The user will describe bugs, issues, or changes they want to make found after im
 Fix each item as described.
 
 Write all conversation output, including what was changed and why, to '$DEBUG_FILE'.
-Each interaction should be recorded in '$DEBUG_FILE'."
+Each interaction should be recorded in '$DEBUG_FILE'.
+
+When ready, run '$PLAY_SOUND' to play an audio notification.
+"
 
 echo "==> Starting debug session. Describe bugs to fix. Output: $DEBUG_FILE"
 append_prompt "$PROMPTS_FILE" "Debug" "$DEBUG_PROMPT"
