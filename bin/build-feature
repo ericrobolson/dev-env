@@ -138,7 +138,11 @@ Split each task into smaller tasks if necessary.
 Append the generated checklist to the end of the content in '$PLAN_FILE'."
 
 echo "==> Generating checklist..."
-FINAL_PROMPT=$(build_prompt "$CHECKLIST_FILE" "$CHECKLIST_PROMPT")
+FINAL_PROMPT="$CHECKLIST_PROMPT
+
+$TERSENESS
+
+Output everything to the file '$CHECKLIST_FILE'."
 append_prompt "$PROMPTS_FILE" "Checklist" "$FINAL_PROMPT"
 echo "$FINAL_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
 append_resume "$PROMPTS_FILE"
@@ -160,6 +164,8 @@ echo "$IMPLEMENTATION_PROMPT" | run_agent "$STAGE" --no-interactive || exit 1
 append_resume "$PROMPTS_FILE"
 
 echo "==> Implementation completed"
+$PLAY_SOUND
+$IDE .
 
 #
 # Stage 6: Debug
@@ -183,8 +189,6 @@ Fix each item as described.
 
 Write all conversation output, including what was changed and why, to '$DEBUG_FILE'.
 Each interaction should be recorded in '$DEBUG_FILE'.
-
-When ready, run '$PLAY_SOUND' to play an audio notification.
 "
 
 echo "==> Starting debug session. Describe bugs to fix. Output: $DEBUG_FILE"
