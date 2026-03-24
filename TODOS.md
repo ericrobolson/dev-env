@@ -16,6 +16,9 @@ A list of items to work on.
 - [x] Add a 'overview' section to the build-feature pipeline that adds a summary of all files and high level summary of the feature and the changes done.
 - [x] Split out audio playing into a script and update all prompts
 - [x] Make checklist stage non-interactive
+- [ ] Add step to replace magic numbers with constants in fresh context before debugging; run format as well; run step to combine like code blocks.
+- [ ] Update the building of prompts to pass in bin/skills which is a list of filenames + descriptions/scripts of this that can be used by claude to do things like 'open file in ide', 'play sound', 'run command', 'md2pdf', 'etc'
+- [ ] https://old.reddit.com/r/AI_Agents/comments/1rxwqn8/i_made_a_stupid_simple_maintenancemd_for_ai_docs/ somehow encode that?
 - [ ] Update the whole 'open file in ide' section to use similiar pattern to 'play-sound' and 'play_sound' where a script is defined, but the path is injected into the prompt.
 - [ ] For build-feature, make the 'unknowns' section include a suggestion in **BOLD** for ease of review; alternatively add a **DECISION: ** option for each element in the unknowns section
 - [ ] Make ide set as env variable and if not set prompt user.

@@ -9,3 +9,6 @@ test-clean-room:
 
 test-append-prompt:
 	bash tests/test-append-prompt.sh
+
+finalize:
+	claude "Update the README.md to reflect the new features and changes since the last commit"
