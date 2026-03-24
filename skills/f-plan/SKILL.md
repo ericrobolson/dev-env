@@ -116,17 +116,29 @@ test: <cmd>
 
 Iterate until approved.
 
-## Stage 10a: Epics
+## Stage 10: Monitoring & Observability
 
-Append `## Stage 10a: Epics`. Based on all prior stages, generate high-level epics that cover the full implementation scope. Each epic should have a name and brief description. Draft and iterate until approved.
+Append `## Stage 10: Monitoring & Observability`. Based on stages 0–9, draft a monitoring and observability plan. Ask the user what level of monitoring they need. Suggestions:
+- (A) Minimal — basic health checks and stdout logging
+- (B) Standard — structured logging, key metrics, alerting on errors
+- (C) Comprehensive — distributed tracing, dashboards, SLOs/SLIs, on-call alerting
+- (D) Skip — not needed
 
-## Stage 10b: Phases
+If the user selects (D), append with "N/A — not needed" and move on.
 
-Append `## Stage 10b: Phases`. Break each epic into phases. Each phase should have a name, the parent epic, and a description of what it accomplishes. Draft and iterate until approved.
+Otherwise, draft a monitoring plan covering relevant aspects: logging strategy, key metrics to track, health checks, alerting rules, and dashboards. Iterate until approved.
 
-## Stage 10c: Tasks
+## Stage 11a: Epics
 
-Append `## Stage 10c: Tasks`. Break each phase into concrete implementation tasks. Each task should be specific enough that a developer (or LLM) could execute it without ambiguity. Draft and iterate until approved.
+Append `## Stage 11a: Epics`. Based on all prior stages, generate high-level epics that cover the full implementation scope. Each epic should have a name and brief description. Draft and iterate until approved.
+
+## Stage 11b: Phases
+
+Append `## Stage 11b: Phases`. Break each epic into phases. Each phase should have a name, the parent epic, and a description of what it accomplishes. Draft and iterate until approved.
+
+## Stage 11c: Tasks
+
+Append `## Stage 11c: Tasks`. Break each phase into concrete implementation tasks. Each task should be specific enough that a developer (or LLM) could execute it without ambiguity. Draft and iterate until approved.
 
 ## Post-creation
 
