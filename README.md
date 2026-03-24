@@ -261,10 +261,23 @@ Skills are reusable prompt templates in `skills/<skill-name>/SKILL.md` that exte
 | Skill | Purpose |
 |-------|---------|
 | `f-new-skill` | Interactive wizard to design and scaffold a new Claude Code skill |
+| `f-plan` | Interactive product planning wizard — walks through use cases, interfaces, data model, tech stack, and task breakdown, outputting a timestamped plan file |
 
 ---
 
 ## Configuration
+
+### Install Skills
+
+Copy the `skills/` directory to another project:
+
+```bash
+make install-skills path=/Users/ericolson/dev/my-project/.claude/
+```
+
+This copies `skills/` to `/Users/ericolson/dev/forge/.claude/skills/`.
+
+---
 
 ### Agent Type
 
