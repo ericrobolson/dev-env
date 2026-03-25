@@ -130,15 +130,41 @@ Otherwise, draft a monitoring plan covering relevant aspects: logging strategy, 
 
 ## Stage 11a: Epics
 
-Append `## Stage 11a: Epics`. Based on all prior stages, generate high-level epics that cover the full implementation scope. Each epic should have a name and brief description. Draft and iterate until approved.
+Append `## Stage 11a: Epics`. Based on all prior stages, generate high-level epics that cover the full implementation scope. Each epic must use this format:
+
+```
+**Epic N: <Title>**
+
+<Description paragraph>
+```
+
+Where N is the epic number starting at 1. Draft and iterate until approved.
 
 ## Stage 11b: Phases
 
-Append `## Stage 11b: Phases`. Break each epic into phases. Each phase should have a name, the parent epic, and a description of what it accomplishes. Draft and iterate until approved.
+Append `## Stage 11b: Phases`. Break each epic into phases. Group phases under their parent epic using `### Epic N: <Title>` headings. Each phase must use this format:
+
+```
+### Epic N: <Title>
+
+- **P<epic>.<phase>: <Phase Title>**
+  <Description of what this phase accomplishes>
+```
+
+Where `<epic>` is the epic number and `<phase>` is the phase number within that epic, starting at 1. Draft and iterate until approved.
 
 ## Stage 11c: Tasks
 
-Append `## Stage 11c: Tasks`. Break each phase into concrete implementation tasks. Each task should be specific enough that a developer (or LLM) could execute it without ambiguity. Draft and iterate until approved.
+Append `## Stage 11c: Tasks`. Break each phase into concrete implementation tasks. Group tasks under their parent phase using `### Phase P<epic>.<phase>: <Title>` headings. Each task must use this format:
+
+```
+### Phase P<epic>.<phase>: <Phase Title>
+
+- **T<epic>.<phase>.<task>: <Task Title>**
+  <Description — specific enough that a developer or LLM could execute it without ambiguity>
+```
+
+Where `<task>` is the task number within that phase, starting at 1. Draft and iterate until approved.
 
 ## Post-creation
 

@@ -16,3 +16,6 @@ install-skills:
 
 finalize:
 	claude "Update the README.md to reflect the new features and changes since the last commit"
+
+ensure-consistency:
+	claude "Ensure that all skills that are related to each other (f-build-epics & f-plan) are consistent with each other. Ensure that the skills are not duplicated and that the skills are not missing any information."

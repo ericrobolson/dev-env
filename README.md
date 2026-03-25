@@ -261,7 +261,8 @@ Skills are reusable prompt templates in `skills/<skill-name>/SKILL.md` that exte
 | Skill | Purpose |
 |-------|---------|
 | `f-new-skill` | Interactive wizard to design and scaffold a new Claude Code skill |
-| `f-plan` | Interactive product planning wizard — walks through use cases, interfaces, data model, tech stack, and task breakdown, outputting a timestamped plan file |
+| `f-plan` | Interactive product planning wizard — walks through product description, use cases, interfaces, actions, data model, error handling, replayability, persistence, tech stack, observability, and epic/phase/task breakdown, outputting a timestamped `.plan.md` file |
+| `f-build-epics` | Generates epic breakdown folders from a `.plan.md` file — one markdown file per epic with summary, guiding tenets, and per-phase implementation checklists |
 
 ---
 
@@ -272,7 +273,7 @@ Skills are reusable prompt templates in `skills/<skill-name>/SKILL.md` that exte
 Copy the `skills/` directory to another project:
 
 ```bash
-make install-skills path=/Users/ericolson/dev/my-project/.claude/
+make install-skills path=/Users/ericolson/dev/forge/.claude/
 ```
 
 This copies `skills/` to `/Users/ericolson/dev/forge/.claude/skills/`.
@@ -320,10 +321,16 @@ Partial files may remain in the output directory. No automatic cleanup is perfor
 
 ---
 
-## Tests
+## Makefile Targets
 
-```bash
-make test-append-prompt   # Test prompt logging
-```
+| Target | Purpose |
+|--------|---------|
+| `test-build-feature` | Run `build-feature` with a test prompt |
+| `test-gen-doc` | Run `gen-doc` with a test prompt |
+| `test-clean-room` | Run `clean-room` with a test prompt |
+| `test-append-prompt` | Run prompt-logging unit tests |
+| `install-skills` | Copy skills to another project (`make install-skills path=<dest>`) |
+| `finalize` | Update README.md to reflect new features/changes via Claude |
+| `ensure-consistency` | Verify related skills (e.g., `f-build-epics` & `f-plan`) are consistent and complete |
 
 Test scripts are in the `tests/` directory.
