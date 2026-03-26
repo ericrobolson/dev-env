@@ -263,6 +263,8 @@ Skills are reusable prompt templates in `skills/<skill-name>/SKILL.md` that exte
 | `f-new-skill` | Interactive wizard to design and scaffold a new Claude Code skill |
 | `f-plan` | Interactive product planning wizard — walks through product description, use cases, interfaces, actions, data model, error handling, replayability, persistence, tech stack, observability, and epic/phase/task breakdown, outputting a timestamped `.plan.md` file |
 | `f-build-epics` | Generates epic breakdown folders from a `.plan.md` file — one markdown file per epic with summary, guiding tenets, and per-phase implementation checklists |
+| `f-grill-me` | Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree |
+| `f-refine-epic` | Interactively refine an existing epic file by grilling the user on design decisions, resolving ambiguities, and updating the epic with concrete decisions and an expanded checklist |
 
 ---
 
