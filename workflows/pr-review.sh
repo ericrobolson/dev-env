@@ -1,120 +1,150 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Interactive prompts based on _research/pr-reviews.md, ordered by its
-# Suggested review flow.
+# A short, gated review flow based on _research/pr-reviews.md.
+# Each section is opened with a yes/no applicability gate. A "no" on a
+# section check is collected as an attention item for the reviewer.
 
 declare -a SECTIONS=()
-declare -a QUESTIONS=()
-declare -a ANSWERS=()
+declare -a GATES=()
+declare -a RELEVANCE=()
+declare -a CHECK_SECTIONS=()
+declare -a CHECKS=()
+declare -a ATTENTION=()
 
-add_question() {
+add_section() {
     SECTIONS+=("$1")
-    QUESTIONS+=("$2")
+    GATES+=("$2")
+    RELEVANCE+=("$3")
 }
 
-add_question '1. Read the PR description and requirement; clarify intent if it is missing.' 'Can I explain what user, product, or operational need this change addresses?'
-add_question '1. Read the PR description and requirement; clarify intent if it is missing.' 'Does the PR description connect the diff to the requirement, issue, or design decision?'
-add_question '1. Read the PR description and requirement; clarify intent if it is missing.' 'Does the change actually deliver that outcome, including the cases that are easy to miss?'
-add_question '1. Read the PR description and requirement; clarify intent if it is missing.' 'Is the PR small and focused enough to review coherently? If not, can it be split, or can the author identify the main design area to review first?'
-add_question '1. Read the PR description and requirement; clarify intent if it is missing.' 'Is this the right time and place to make this change, given the direction of the surrounding system?'
+add_check() {
+    CHECK_SECTIONS+=("$1")
+    CHECKS+=("$2")
+}
 
-add_question '2. Scan the overall diff and identify the core behavior and highest-risk areas.' 'Does the change behave correctly for expected inputs, boundary cases, invalid states, and failures?'
-add_question '2. Scan the overall diff and identify the core behavior and highest-risk areas.' 'What important behavior is absent from the diff: other call sites, related components, migrations, documentation, tests, or user flows?'
-add_question '2. Scan the overall diff and identify the core behavior and highest-risk areas.' 'Does this reuse an existing capability, or introduce another implementation of the same concept?'
-add_question '2. Scan the overall diff and identify the core behavior and highest-risk areas.' 'Is the abstraction or complexity justified by a real current requirement, rather than a speculative future need?'
-add_question '2. Scan the overall diff and identify the core behavior and highest-risk areas.' 'Does the change preserve existing contracts and behavior for callers, stored data, integrations, and supported clients?'
+add_section \
+    '1. Intent and scope' \
+    'Should I review intent and scope for this PR?' \
+    'Relevant for every PR: understand the user, product, or operational need; check the description and whether the change is focused.'
+add_check 0 'Can I explain the need this change addresses and how the diff delivers it?'
+add_check 0 'Is the change focused and consistent with the surrounding product direction?'
 
-add_question '3. Review design and placement in the context of neighboring code and system contracts.' 'Is each responsibility in the right layer? Is policy or domain behavior leaking into UI code, transport handlers, or unrelated infrastructure?'
-add_question '3. Review design and placement in the context of neighboring code and system contracts.' 'Are new files in the right part of the project, following established ownership and dependency boundaries? Does the change make code easier to find and maintain?'
-add_question '3. Review design and placement in the context of neighboring code and system contracts.' 'Is consistency with the codebase helping here, without perpetuating a design this change can reasonably improve?'
-add_question '3. Review design and placement in the context of neighboring code and system contracts.' 'Where several options are technically sound, can I accept the author’s choice instead of requiring my preferred implementation?'
+add_section \
+    '2. Behavior and omissions' \
+    'Should I trace behavior and look for omissions in this PR?' \
+    'Relevant when behavior changes, including edge cases, failures, related call sites, migrations, docs, or user flows.'
+add_check 1 'Does the change handle expected inputs, boundary cases, invalid states, and failures?'
+add_check 1 'Are related components, callers, data changes, and user flows covered where needed?'
+add_check 1 'Does it preserve existing contracts for callers, stored data, integrations, and supported clients?'
 
-add_question '4. Trace user input and permissions through trusted backend enforcement and failure handling.' 'What policy determines whether this action is allowed, and where is that policy defined?'
-add_question '4. Trace user input and permissions through trusted backend enforcement and failure handling.' 'Are authentication (who the caller is) and authorization (what that caller may do) treated separately?'
-add_question '4. Trace user input and permissions through trusted backend enforcement and failure handling.' 'Are permissions checked for every relevant operation and resource, including object ownership, tenant boundaries, and administrative actions?'
-add_question '4. Trace user input and permissions through trusted backend enforcement and failure handling.' 'Is the decisive check performed on a trusted server-side boundary? Could someone bypass a UI check by calling an API directly or changing request parameters?'
-add_question '4. Trace user input and permissions through trusted backend enforcement and failure handling.' 'Are security-relevant values such as owner, role, price, or workflow state derived or validated from trusted server-side data rather than trusted from the client?'
-add_question '4. Trace user input and permissions through trusted backend enforcement and failure handling.' 'Are invalid state transitions and unauthorized requests rejected safely, without partial writes, information leaks, or an unstable state?'
-add_question '4. Trace user input and permissions through trusted backend enforcement and failure handling.' 'Are policy rules centralized enough to be applied consistently, while remaining understandable and testable?'
-add_question '4. Trace user input and permissions through trusted backend enforcement and failure handling.' 'Do tests or inspection cover direct entry points as well as normal UI flows?'
+add_section \
+    '3. Design and contracts' \
+    'Should I review design and system boundaries for this PR?' \
+    'Relevant when responsibilities, dependencies, abstractions, or new files are introduced or moved.'
+add_check 2 'Are responsibilities in the right layer and new code in the right part of the project?'
+add_check 2 'Is the complexity justified by a current requirement, and does it fit or improve established patterns?'
+add_check 2 'Am I focusing feedback on material issues rather than my personal implementation preference?'
 
-add_question '5. Inspect tests and evidence, including what is missing from the diff.' 'Do tests cover the new behavior and important regressions, including denial paths, edge cases, and failures?'
-add_question '5. Inspect tests and evidence, including what is missing from the diff.' 'Would these tests fail if the production behavior were broken? Are assertions meaningful, or could the tests pass without proving the requirement?'
-add_question '5. Inspect tests and evidence, including what is missing from the diff.' 'Are test names and failure messages useful when something breaks?'
-add_question '5. Inspect tests and evidence, including what is missing from the diff.' 'Is coverage at the right level—unit, integration, end-to-end, or manual—without making tests brittle or needlessly broad?'
-add_question '5. Inspect tests and evidence, including what is missing from the diff.' 'For UI, concurrency, or environment-sensitive behavior, is inspection or running the change needed in addition to automated tests?'
-add_question '5. Inspect tests and evidence, including what is missing from the diff.' 'Were related tests, fixtures, scripts, docs, and supported implementations updated, rather than only the obvious changed file?'
-add_question '5. Inspect tests and evidence, including what is missing from the diff.' 'Have I reviewed the tests themselves, rather than relying on a test count or green check alone?'
+add_section \
+    '4. Security and permissions' \
+    'Does this PR touch permissions, identity, sensitive data, or trusted input?' \
+    'Relevant when a change handles authentication, authorization, ownership, tenant boundaries, sensitive values, or state transitions.'
+add_check 3 'Are permissions enforced at a trusted boundary for every relevant operation and resource?'
+add_check 3 'Are security-sensitive values derived or validated from trusted data, not accepted from the client?'
+add_check 3 'Are unauthorized requests and invalid transitions rejected safely, without leaks or partial writes?'
+add_check 3 'Do tests or inspection cover direct entry points as well as normal UI flows?'
 
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Is this value a stable invariant of the product, or does it reasonably vary by environment, deployment, tenant, operator, or policy?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Are thresholds, URLs, feature switches, provider choices, and policy values hardcoded when they need operational control—or made configurable when variation would add needless complexity?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Are defaults safe, documented, and suitable for production? What happens when configuration is missing, malformed, or inconsistent?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Are credentials and other secrets supplied through an appropriate secret-management mechanism rather than committed to source or shipped to clients?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Does configuration have validation, ownership, and change visibility appropriate to its risk?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'What changes for users, administrators, support staff, or downstream systems?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Is Customer Experience (CX), support, or the relevant product owner aware when the change affects customer workflows, behavior, or troubleshooting?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Do support teams have the product behavior, known limitations, and troubleshooting information needed to answer likely questions?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Are release notes, user communication, documentation, or training needed for a visible behavior change?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Are errors handled usefully and safely? Can operators tell what happened without exposing sensitive data?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Are appropriate logs, metrics, alerts, and audit records added for this change, without recording secrets or sensitive user data?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Could the change affect latency, throughput, resource use, cost, availability, or data retention?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Is rollout controlled where needed (for example, a feature flag or staged deployment), and is the flag itself observable and removable?'
-add_question '6. Consider deployment, monitoring, rollback, support, and customer communication.' 'Are production and staging differences understood? Can the change be rolled back or safely disabled, and what happens to data written while it is enabled?'
+add_section \
+    '5. Tests and evidence' \
+    'Should I review test coverage and other evidence for this PR?' \
+    'Relevant when behavior changes or correctness depends on UI, concurrency, integrations, or environment-specific behavior.'
+add_check 4 'Do tests meaningfully prove the changed behavior, including important regressions and failure paths?'
+add_check 4 'Have I reviewed the tests themselves and checked that related fixtures, scripts, and supported implementations are updated?'
+add_check 4 'Is additional inspection or a manual run needed beyond the automated tests?'
 
-add_question '7. Leave a small set of specific, prioritized comments with clear blocking or non-blocking status.' 'Is each comment tied to a concrete failure mode, maintainability concern, requirement, or established convention?'
-add_question '7. Leave a small set of specific, prioritized comments with clear blocking or non-blocking status.' 'Does the comment explain why the issue matters and give enough context to act on it?'
-add_question '7. Leave a small set of specific, prioritized comments with clear blocking or non-blocking status.' 'Have I separated must-fix findings from optional ideas, educational notes, and nits?'
-add_question '7. Leave a small set of specific, prioritized comments with clear blocking or non-blocking status.' 'Am I asking for a change because it materially improves correctness, security, usability, or code health—or only because I would have written it differently?'
-add_question '7. Leave a small set of specific, prioritized comments with clear blocking or non-blocking status.' 'Have I prioritized the most important findings so that critical issues are not buried in a long list of minor comments?'
-add_question '7. Leave a small set of specific, prioritized comments with clear blocking or non-blocking status.' 'Have I acknowledged good decisions or useful improvements as well as problems?'
+add_section \
+    '6. Customer-visible behavior' \
+    'Does this PR change behavior or content that customers can see or experience?' \
+    'Relevant for changed workflows, UI, API behavior, notifications, performance, errors, or customer-facing documentation.'
+add_check 5 'Is the customer-facing behavior understandable and useful, including error and empty states?'
+add_check 5 'Are visible behavior changes documented or communicated where needed?'
+add_check 5 'Could this change affect customer data, latency, availability, or other user expectations?'
 
-add_question '8. Re-review material amendments and close the loop on outstanding concerns.' 'Have I reviewed the author’s amendments and confirmed that important concerns were addressed?'
-add_question '8. Re-review material amendments and close the loop on outstanding concerns.' 'Have I used review status consistently, making blocking intent explicit when a concern means the change should not merge?'
-add_question '8. Re-review material amendments and close the loop on outstanding concerns.' 'If the change is acceptable and comments are suggestions, have I made that clear?'
-add_question '8. Re-review material amendments and close the loop on outstanding concerns.' 'If the PR is too large or unclear to review responsibly, have I asked for the requirement, a review guide, or a smaller set of independent changes?'
+add_section \
+    '7. CX and support readiness' \
+    'Does this PR change what CX or support teams may need to explain or troubleshoot?' \
+    'Relevant when customer workflows, known limitations, troubleshooting steps, or support procedures change.'
+add_check 6 'Do CX and support have the behavior and known limitations they need to answer likely questions?'
+add_check 6 'Can support diagnose likely failures without exposing sensitive information?'
+add_check 6 'Are support guidance, training, or escalation paths updated where needed?'
+
+add_section \
+    '8. Production readiness' \
+    'Does this PR affect production configuration, operations, or rollout?' \
+    'Relevant when changing secrets, configuration, provider choices, observability, resource use, deployment, or persisted data.'
+add_check 7 'Are defaults safe, configuration validated, and secrets handled appropriately?'
+add_check 7 'Are appropriate logs, metrics, alerts, or audit records available without recording sensitive data?'
+add_check 7 'Is rollout, disablement, and rollback understood, including data written while the change is enabled?'
+
+add_section \
+    '9. Review feedback and follow-up' \
+    'Should I check review comments and follow-up for this PR?' \
+    'Relevant for every review: make findings actionable, distinguish blockers from suggestions, and re-check material amendments.'
+add_check 8 'Are comments specific, prioritized, and clear about why the issue matters and what to do next?'
+add_check 8 'Are blocking concerns explicit, with optional suggestions separated from must-fix findings?'
+add_check 8 'Have I reviewed material amendments and closed the loop on outstanding concerns?'
+
+ask_yes_no() {
+    local prompt="$1"
+    local answer
+
+    while true; do
+        printf '%s [y/n] ' "$prompt"
+        if ! IFS= read -r answer; then
+            printf '\nInput closed; ending review checklist.\n' >&2
+            exit 1
+        fi
+        case "${answer,,}" in
+            y|yes) REPLY='yes'; return 0 ;;
+            n|no) REPLY='no'; return 0 ;;
+            *) printf 'Please answer y, n, yes, or no.\n' ;;
+        esac
+    done
+}
 
 printf 'PR review checklist\n'
-printf 'Answer each prompt in your own words. Answers will be summarized at the end.\n'
+printf 'Answer yes or no. Section gates show when a focused set of checks is relevant.\n'
 
-current_section=''
-for i in "${!QUESTIONS[@]}"; do
-    if [[ "${SECTIONS[$i]}" != "$current_section" ]]; then
-        current_section="${SECTIONS[$i]}"
-        printf '\n\n=== %s ===\n' "$current_section"
-    fi
+for i in "${!SECTIONS[@]}"; do
+    printf '\n\n=== %s ===\n' "${SECTIONS[$i]}"
+    printf 'Relevant when: %s\n' "${RELEVANCE[$i]}"
+    ask_yes_no "${GATES[$i]}"
+    [[ "$REPLY" == 'yes' ]] || continue
 
-    printf '\n%s ' "${QUESTIONS[$i]}"
-    if ! IFS= read -r answer; then
-        printf '\nInput closed; ending review checklist.\n' >&2
-        exit 1
-    fi
-    ANSWERS+=("$answer")
+    for j in "${!CHECKS[@]}"; do
+        [[ "${CHECK_SECTIONS[$j]}" == "$i" ]] || continue
+        ask_yes_no "${CHECKS[$j]}"
+        if [[ "$REPLY" == 'no' ]]; then
+            ATTENTION+=("${SECTIONS[$i]}|${CHECKS[$j]}")
+        fi
+    done
 done
 
-printf '\n\n=== Review summary ===\n'
-current_section=''
-for i in "${!QUESTIONS[@]}"; do
-    if [[ "${SECTIONS[$i]}" != "$current_section" ]]; then
-        current_section="${SECTIONS[$i]}"
-        printf '\n%s\n' "$current_section"
-    fi
-    if [[ -z "${ANSWERS[$i]//[[:space:]]/}" ]]; then
-        continue
-    fi
-    case "${ANSWERS[$i],,}" in
-        y|yes)
-            printf '  [y] %s\n' "${QUESTIONS[$i]}"
-            ;;
-        n|no)
-            printf '  [n] %s\n' "${QUESTIONS[$i]}"
-            ;;
-        *)
-            printf '  %s\n\t%s\n' "${QUESTIONS[$i]}" "${ANSWERS[$i]}"
-            ;;
-    esac
-done
+printf '\n\n=== Review attention list ===\n'
+if ((${#ATTENTION[@]} == 0)); then
+    printf 'No checklist concerns recorded. Use your judgment when writing the PR review.\n'
+else
+    current_section=''
+    for item in "${ATTENTION[@]}"; do
+        section="${item%%|*}"
+        question="${item#*|}"
+        if [[ "$section" != "$current_section" ]]; then
+            current_section="$section"
+            printf '\n%s\n' "$current_section"
+        fi
+        printf '  - %s\n' "$question"
+    done
+fi
 
-printf '\nChecklist complete.\n'
-printf '\n=== Before submitting your review ===\n'
-printf 'Use this checklist as a private review aid. Comment on concrete findings: identify the changed behavior, explain a failure scenario or impact, and suggest a clear next step. Prioritize the few issues that matter and make blocking concerns explicit.\n'
+printf '\nChecklist complete. Write concrete findings in the PR, make blocking status explicit, and acknowledge useful decisions.\n'
