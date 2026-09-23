@@ -75,7 +75,7 @@ add_question '8. Re-review material amendments and close the loop on outstanding
 add_question '8. Re-review material amendments and close the loop on outstanding concerns.' 'If the PR is too large or unclear to review responsibly, have I asked for the requirement, a review guide, or a smaller set of independent changes?'
 
 printf 'PR review checklist\n'
-printf 'Answer each prompt with y, n, or note: followed by a comment. Answers will be summarized at the end.\n'
+printf 'Answer each prompt in your own words. Answers will be summarized at the end.\n'
 
 current_section=''
 for i in "${!QUESTIONS[@]}"; do
@@ -84,36 +84,12 @@ for i in "${!QUESTIONS[@]}"; do
         printf '\n\n=== %s ===\n' "$current_section"
     fi
 
-    while true; do
-        printf '\n%s [y/n, or note: ...] ' "${QUESTIONS[$i]}"
-        if ! IFS= read -r answer; then
-            printf '\nInput closed; ending review checklist.\n' >&2
-            exit 1
-        fi
-
-        case "$answer" in
-            [yY])
-                ANSWERS+=(Y)
-                break
-                ;;
-            [nN])
-                ANSWERS+=(N)
-                break
-                ;;
-            [nN][oO][tT][eE]:*)
-                note="${answer#*:}"
-                note="${note# }"
-                if [[ -n "${note//[[:space:]]/}" ]]; then
-                    ANSWERS+=("NOTE: $note")
-                    break
-                fi
-                printf "Please add text after 'note:'.\n"
-                ;;
-            *)
-                printf "Please answer 'y', 'n', or 'note: your comment'.\n"
-                ;;
-        esac
-    done
+    printf '\n%s ' "${QUESTIONS[$i]}"
+    if ! IFS= read -r answer; then
+        printf '\nInput closed; ending review checklist.\n' >&2
+        exit 1
+    fi
+    ANSWERS+=("$answer")
 done
 
 printf '\n\n=== Review summary ===\n'
@@ -123,13 +99,18 @@ for i in "${!QUESTIONS[@]}"; do
         current_section="${SECTIONS[$i]}"
         printf '\n%s\n' "$current_section"
     fi
-    case "${ANSWERS[$i]}" in
-        'NOTE: '*)
-            printf '  [NOTE] %s\n' "${QUESTIONS[$i]}"
-            printf '         %s\n' "${ANSWERS[$i]#NOTE: }"
+    if [[ -z "${ANSWERS[$i]//[[:space:]]/}" ]]; then
+        continue
+    fi
+    case "${ANSWERS[$i],,}" in
+        y|yes)
+            printf '  [y] %s\n' "${QUESTIONS[$i]}"
+            ;;
+        n|no)
+            printf '  [n] %s\n' "${QUESTIONS[$i]}"
             ;;
         *)
-            printf '  [%s] %s\n' "${ANSWERS[$i]}" "${QUESTIONS[$i]}"
+            printf '  %s\n\t%s\n' "${QUESTIONS[$i]}" "${ANSWERS[$i]}"
             ;;
     esac
 done
