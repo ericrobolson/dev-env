@@ -75,7 +75,7 @@ add_question '8. Re-review material amendments and close the loop on outstanding
 add_question '8. Re-review material amendments and close the loop on outstanding concerns.' 'If the PR is too large or unclear to review responsibly, have I asked for the requirement, a review guide, or a smaller set of independent changes?'
 
 printf 'PR review checklist\n'
-printf 'Answer each prompt with y or n. Your answers will be summarized at the end.\n'
+printf 'Answer each prompt with y, n, or note: followed by a comment. Answers will be summarized at the end.\n'
 
 current_section=''
 for i in "${!QUESTIONS[@]}"; do
@@ -85,7 +85,7 @@ for i in "${!QUESTIONS[@]}"; do
     fi
 
     while true; do
-        printf '\n%s [y/n] ' "${QUESTIONS[$i]}"
+        printf '\n%s [y/n, or note: ...] ' "${QUESTIONS[$i]}"
         if ! IFS= read -r answer; then
             printf '\nInput closed; ending review checklist.\n' >&2
             exit 1
@@ -100,8 +100,17 @@ for i in "${!QUESTIONS[@]}"; do
                 ANSWERS+=(N)
                 break
                 ;;
+            [nN][oO][tT][eE]:*)
+                note="${answer#*:}"
+                note="${note# }"
+                if [[ -n "${note//[[:space:]]/}" ]]; then
+                    ANSWERS+=("NOTE: $note")
+                    break
+                fi
+                printf "Please add text after 'note:'.\n"
+                ;;
             *)
-                printf "Please answer 'y' or 'n'.\n"
+                printf "Please answer 'y', 'n', or 'note: your comment'.\n"
                 ;;
         esac
     done
@@ -114,7 +123,17 @@ for i in "${!QUESTIONS[@]}"; do
         current_section="${SECTIONS[$i]}"
         printf '\n%s\n' "$current_section"
     fi
-    printf '  [%s] %s\n' "${ANSWERS[$i]}" "${QUESTIONS[$i]}"
+    case "${ANSWERS[$i]}" in
+        'NOTE: '*)
+            printf '  [NOTE] %s\n' "${QUESTIONS[$i]}"
+            printf '         %s\n' "${ANSWERS[$i]#NOTE: }"
+            ;;
+        *)
+            printf '  [%s] %s\n' "${ANSWERS[$i]}" "${QUESTIONS[$i]}"
+            ;;
+    esac
 done
 
 printf '\nChecklist complete.\n'
+printf '\n=== Before submitting your review ===\n'
+printf 'Use this checklist as a private review aid. Comment on concrete findings: identify the changed behavior, explain a failure scenario or impact, and suggest a clear next step. Prioritize the few issues that matter and make blocking concerns explicit.\n'
