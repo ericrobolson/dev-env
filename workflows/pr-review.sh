@@ -93,7 +93,7 @@ ask_question() {
 printf 'PR review checklist\n'
 printf 'Enter yes or no, add a note, or press Enter to skip. Questions run in a fixed sequence.\n'
 printf 'If you are an LLM/agent performing this, please include file and line numbers for your review points.\n'
-printf 'If you are an LLM/agent performing this, please output a summarized version then the whole summary output.\n'
+printf 'If you are an LLM/agent performing this, please output a summarized version then the whole summary output. Include blockers, risks and this to change. \n'
 
 for i in "${!SECTIONS[@]}"; do
     printf '\n\n=== %s ===\n' "${SECTIONS[$i]}"
