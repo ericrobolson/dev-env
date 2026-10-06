@@ -44,12 +44,14 @@ if ! pdftoppm -jpeg -r 150 "$pdf_path" "$output_dir/page"; then
     fail "PDF conversion failed; partial output is in $output_dir"
 fi
 
-page=1
-while [[ -f "$output_dir/page-$page.jpg" ]]; do
-    printf -v numbered '%03d.jpg' "$((page - 1))"
-    mv "$output_dir/page-$page.jpg" "$output_dir/$numbered"
+# pdftoppm zero-pads page numbers to the page count's width (page-01.jpg for 10+ pages),
+# so rename whatever it produced in numeric order rather than guessing names.
+page=0
+while IFS= read -r f; do
+    printf -v numbered '%03d.jpg' "$page"
+    mv "$f" "$output_dir/$numbered"
     page=$((page + 1))
-done
+done < <(find "$output_dir" -name 'page-*.jpg' | sort -V)
 
-(( page > 1 )) || fail "conversion produced no pages; inspect the PDF and partial output in $output_dir"
-printf 'Converted %d page(s) to %s\n' "$((page - 1))" "$output_dir"
+(( page > 0 )) || fail "conversion produced no pages; inspect the PDF and partial output in $output_dir"
+printf 'Converted %d page(s) to %s\n' "$page" "$output_dir"
