@@ -94,6 +94,7 @@ printf 'PR review checklist\n'
 printf 'Enter yes or no, add a note, or press Enter to skip. Questions run in a fixed sequence.\n'
 printf 'If you are an LLM/agent performing this, please include file and line numbers for your review points.\n'
 printf 'If you are an LLM/agent performing this, please output a summarized version then the whole summary output. Include blockers, risks and this to change. \n'
+printf 'If you are an LLM/agent performing this, for every blocker, risk, suggestion, and question, give the file path and line number (or range) in the new version of the diff where the comment belongs, plus a ready-to-post example PR comment. Format each as: "path/to/file.ext:42 (Blocker|Risk|Suggestion|Question)" followed by the comment text, written to the PR author, stating the issue, why it matters, and a concrete fix or question.\n'
 printf 'If you are an LLM/agent performing this, include a brief, high-level text flow diagram of what you reviewed. Use actual modules, classes, and functions, and express the flow as pseudocode.\n'
 printf 'If you are an LLM/agent performing this, save a copy of the complete review as Markdown in .tmp/<timestamp>_{InferredName}.md (create .tmp if needed; use a sortable timestamp and infer a concise name from the PR or change).\n'
 
