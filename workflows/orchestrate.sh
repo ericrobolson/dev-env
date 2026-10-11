@@ -7,7 +7,8 @@ set -euo pipefail
 # Finished tasks are merged into the branch that was checked out when this
 # script ran. This script records the feature set in
 # planner/<timestamp>_<feature>.md and prints a prompt that has the host agent
-# fill in and check off that file as it works. Edit the models for each
+# fill in and check off that file as it works, running unattended until it
+# stops for approval once the final review is clean. Edit the models for each
 # provider below.
 
 fail() {
@@ -98,8 +99,8 @@ Build the features in $plan_file with an orchestrator model. $brain plans and re
 $plan_file is the source of truth. Keep its Status line current, check off tasks as they are merged, and add one line to its Log for every dispatch, verification, merge, review, and escalation.
 
 Stages:
-1. Breakdown ($brain). Split each feature into tasks that each fit in one $worker context window. Give each task an id (T1, T2, ...), the files it may touch, and the tests it must add first. Review the breakdown for gaps, errors, and security issues, write it under Tasks, and stop for my approval.
-2. Grouping ($brain). Put tasks that touch separate files and do not depend on each other into the same parallel group. Order the groups so each one builds on the merged result of the ones before it, and mark any group that must run one task at a time as sequential. Write this under Groups and stop for my approval.
+1. Breakdown ($brain). Split each feature into tasks that each fit in one $worker context window. Give each task an id (T1, T2, ...), the files it may touch, and the tests it must add first. Review the breakdown for gaps, errors, and security issues, write it under Tasks, and go straight on to grouping.
+2. Grouping ($brain). Put tasks that touch separate files and do not depend on each other into the same parallel group. Order the groups so each one builds on the merged result of the ones before it, and mark any group that must run one task at a time as sequential. Write this under Groups and go straight on to the build.
 3. Build ($brain spins up one $taskmaster orchestrator). Work from the main checkout on $base_branch, and use $wt for every worktree step. For each group in order:
    - Run \`$wt add $safe_name <task id>\` for each task. It prints the worktree path.
    - Spin up one $worker subagent per task. Tell it to work and run tests only in its worktree path, and to commit its work there when done.
@@ -107,9 +108,10 @@ Stages:
    - Merge verified tasks one at a time with \`$wt merge $safe_name <task id>\`, and run the tests on $base_branch after each merge.
    - If a merge conflicts, the script aborts it. Do not resolve it by hand. Send it to $brain, because the grouping was wrong.
    - After each merge, run \`$wt remove $safe_name <task id>\`. Then start the next group.
-4. Review ($brain). Once $taskmaster gives the all-clear, review the full \`git diff $base_commit..HEAD\` on $base_branch. Findings become a new group of tasks that goes back through stage 3. When the review is clean, set Status to done and stop.
+4. Review ($brain). Once $taskmaster gives the all-clear, review the full \`git diff $base_commit..HEAD\` on $base_branch. Findings become a new group of tasks that goes back through stage 3. When the review is clean, set Status to awaiting approval, give me a short summary of what was built and any decisions you made along the way, and stop for my approval. Set Status to done once I approve.
 
 Rules:
+- Run every stage without stopping to ask me anything. The only stop for my approval is at the end of stage 4. When a choice is unclear, $brain makes the call and logs it in $plan_file.
 - Set the model explicitly on every subagent you spin up, because default subagents inherit the caller's model. The orchestrator runs on $taskmaster, and workers never run on $brain.
 - $taskmaster only dispatches, verifies, merges, and updates $plan_file. It does not write code itself.
 - $taskmaster picks the smallest model and effort that can handle each task, defaulting to $worker.
