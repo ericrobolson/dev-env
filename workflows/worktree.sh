@@ -29,6 +29,19 @@ check_name() {
     [[ "$2" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || fail "invalid $1 name: $2"
 }
 
+# A file committed as a plain blob before a filter=lfs rule covered it shows as
+# modified in every fresh checkout: the LFS clean filter turns it into a pointer
+# that no longer matches the blob. If the raw bytes still equal the committed
+# blob, nothing changed, so hide it from status (or merge and remove refuse).
+hide_lfs_phantoms() {
+    local wt="$1" f
+    git -C "$wt" diff --name-only -z | while IFS= read -r -d '' f; do
+        [[ "$(git -C "$wt" check-attr filter -- "$f")" == *': filter: lfs' ]] || continue
+        [[ "$(git -C "$wt" hash-object --no-filters -- "$f")" == "$(git -C "$wt" rev-parse ":$f")" ]] || continue
+        git -C "$wt" update-index --assume-unchanged -- "$f"
+    done
+}
+
 force=false
 if [[ $# -eq 4 && "$1" == remove && "$2" == --force ]]; then
     force=true
@@ -61,6 +74,7 @@ case "$command" in
             printf '.worktrees/\n' >> "$exclude"
         fi
         git -C "$main" worktree add --quiet -b "$branch" "$path" HEAD
+        hide_lfs_phantoms "$path"
         printf '%s\n' "$path"
         ;;
     merge)
