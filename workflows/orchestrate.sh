@@ -5,7 +5,7 @@ set -euo pipefail
 # mid-tier "taskmaster" dispatches and verifies tasks, and cheaper "worker"
 # subagents write the code, each in its own git worktree made by worktree.sh.
 # Finished tasks are merged into the branch that was checked out when this
-# script ran. This script records the feature set in
+# script ran. This script records the feature set in the current directory, in
 # planner/<timestamp>_<feature>.md and prints a prompt that has the host agent
 # fill in and check off that file as it works, running unattended until it
 # stops for approval once the final review is clean. Edit the models for each
@@ -18,7 +18,7 @@ fail() {
 
 wt="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/worktree.sh"
 root=$(git rev-parse --show-toplevel 2> /dev/null) || fail 'run this from inside a git repository'
-# worktree.sh always merges into the main checkout, so the plan must live there too.
+# worktree.sh always merges into the main checkout, so run from there.
 main=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
 [[ "$root" == "$main" ]] || fail "run this from the main checkout ($main), not a linked worktree"
 base_branch=$(git symbolic-ref --quiet --short HEAD) || fail 'check out a branch first; HEAD is detached'
@@ -66,12 +66,12 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 done
 [[ -n "$features" ]] || fail 'feature set must not be empty'
 
-mkdir -p "$root/planner"
+mkdir -p planner
 timestamp=$(date '+%y%m%d-%H%M%S')
-plan_file="planner/${timestamp}_${safe_name}.md"
-[[ ! -e "$root/$plan_file" ]] || fail "plan file already exists: $plan_file"
+plan_file="$PWD/planner/${timestamp}_${safe_name}.md"
+[[ ! -e "$plan_file" ]] || fail "plan file already exists: $plan_file"
 
-cat > "$root/$plan_file" <<PLAN
+cat > "$plan_file" <<PLAN
 # $feature_name
 
 Status: breakdown
