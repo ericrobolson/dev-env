@@ -78,6 +78,11 @@ add_section '13. Review feedback and follow-up'
 add_check 12 'Are comments concrete, prioritized, and actionable, with blockers clearly separated from optional suggestions?'
 add_check 12 'Have I re-reviewed material amendments, closed outstanding concerns, and acknowledged useful decisions?'
 
+add_section '14. Idiomatic approaches'
+add_check 13 'Is there a more idiomatic way to do this in the language, framework, or library being used (standard library helpers, built-in patterns, community conventions)?'
+add_check 13 'Does the change follow the idioms and patterns already established elsewhere in this codebase, or is there an existing helper or pattern it should reuse?'
+add_check 13 'If I know a more idiomatic alternative, can I name it and show a concrete snippet or link in the review rather than only saying "this could be more idiomatic"?'
+
 ask_question() {
     local prompt="$1"
     local answer
@@ -96,6 +101,7 @@ printf 'If you are an LLM/agent performing this, please include file and line nu
 printf 'If you are an LLM/agent performing this, please output a summarized version then the whole summary output. Include blockers, risks and this to change. \n'
 printf 'If you are an LLM/agent performing this, for every blocker, risk, suggestion, and question, give the file path and line number (or range) in the new version of the diff where the comment belongs, plus a ready-to-post example PR comment. Format each as: "path/to/file.ext:42 (Blocker|Risk|Suggestion|Question)" followed by the comment text, written to the PR author, stating the issue, why it matters, and a concrete fix or question.\n'
 printf 'If you are an LLM/agent performing this, include a brief, high-level text flow diagram of what you reviewed. Use actual modules, classes, and functions, and express the flow as pseudocode.\n'
+printf 'If you are an LLM/agent performing this, in the Idiomatic approaches section list every place where a more idiomatic language, framework, library, or in-repo pattern exists (with file:line and the suggested alternative), or state explicitly that none were found.\n'
 printf 'If you are an LLM/agent performing this, save a copy of the complete review as Markdown in .tmp/<timestamp>_{InferredName}.md (create .tmp if needed; use a sortable timestamp and infer a concise name from the PR or change).\n'
 
 for i in "${!SECTIONS[@]}"; do
