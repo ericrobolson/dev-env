@@ -104,6 +104,15 @@ printf 'If you are an LLM/agent performing this, include a brief, high-level tex
 printf 'If you are an LLM/agent performing this, in the Idiomatic approaches section list every place where a more idiomatic language, framework, library, or in-repo pattern exists (with file:line and the suggested alternative), or state explicitly that none were found.\n'
 printf 'If you are an LLM/agent performing this, save a copy of the complete review as Markdown in .tmp/<timestamp>_{InferredName}.md (create .tmp if needed; use a sortable timestamp and infer a concise name from the PR or change).\n'
 
+# Extra review instructions live in .workflow-instructions.md next to this script.
+instructions_file="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.workflow-instructions.md"
+if [[ -r "$instructions_file" ]]; then
+    printf '\n=== Repository instructions (%s) ===\n' "$instructions_file"
+    printf 'Follow these repository-specific instructions in addition to the checklist; where they conflict, these take precedence.\n\n'
+    cat "$instructions_file"
+    printf '\n'
+fi
+
 for i in "${!SECTIONS[@]}"; do
     printf '\n\n=== %s ===\n' "${SECTIONS[$i]}"
     for j in "${!CHECKS[@]}"; do
