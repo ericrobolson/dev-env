@@ -361,7 +361,9 @@ pub fn run_jobs(
                 if let Some(delay) = retry_after {
                     delayed.push((Instant::now() + delay, work));
                 } else {
-                    ready.push_back(work);
+                    // Finish a retried item before starting more fresh jobs so
+                    // token-limited runs can persist completed items.
+                    ready.push_front(work);
                 }
             }
         }

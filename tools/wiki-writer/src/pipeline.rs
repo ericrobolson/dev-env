@@ -373,6 +373,55 @@ fn save_record(
     atomic_write(path, &serde_json::to_vec_pretty(&record)?)
 }
 
+fn deterministic_outline(
+    config: &Config,
+    schema: &Schema,
+    entities: &[Entity],
+    gaps: &[String],
+) -> Outline {
+    let mut by_namespace = BTreeMap::<String, Vec<&Entity>>::new();
+    for entity in entities {
+        let plural = if let Some(stem) = entity.entity_type.strip_suffix('y') {
+            format!("{stem}ies")
+        } else {
+            format!("{}s", entity.entity_type)
+        };
+        let namespace = if schema.namespaces.contains(&plural) {
+            plural
+        } else {
+            schema.namespaces[0].clone()
+        };
+        by_namespace.entry(namespace).or_default().push(entity);
+    }
+    let mut pages = vec![PageSpec {
+        id: "start".into(),
+        title: config.project.clone(),
+        kind: PageKind::Index,
+        entity_ids: vec![],
+        fact_ids: vec![],
+    }];
+    for (namespace, mut members) in by_namespace {
+        members.sort_by_key(|entity| (entity.name.to_lowercase(), entity.id.clone()));
+        for (index, group) in members.chunks(20).enumerate() {
+            let mut fact_ids = BTreeSet::new();
+            for entity in group {
+                fact_ids.extend(entity.fact_ids.iter().cloned());
+            }
+            pages.push(PageSpec {
+                id: format!("{namespace}:page_{:04}", index + 1),
+                title: format!("{} {}", namespace.replace('_', " "), index + 1),
+                kind: PageKind::Leaf,
+                entity_ids: group.iter().map(|entity| entity.id.clone()).collect(),
+                fact_ids: fact_ids.into_iter().collect(),
+            });
+        }
+    }
+    Outline {
+        pages,
+        gaps: gaps.to_vec(),
+    }
+}
+
 fn hex(bytes: &[u8]) -> String {
     sha256(bytes)
 }
@@ -1284,6 +1333,11 @@ pub fn run_organize(
             }],
             gaps: gaps.to_vec(),
         })
+    } else if entities.len() > 500 {
+        let outline = deterministic_outline(config, schema, entities, gaps);
+        let errors = validate::validate_outline(&outline, schema, entities, facts);
+        ensure!(errors.is_empty(), "generated outline invalid: {}", errors.join("; "));
+        Some(outline)
     } else {
         let data =
             serde_json::json!({"entities":compact,"namespaces":schema.namespaces,"gaps":gaps});

@@ -118,7 +118,7 @@ Steps:
    - files and directories the worker should never read because the plan already covers them.
    Read the key ranges yourself only where a decision depends on them.
 3. Run the build and test commands once. Record whether they pass, so the plan's baseline is known to work (or note existing failures).
-4. Decide every open question yourself. Prefer the smallest choice that keeps the design intact. Write each decision as one line under "Decisions (do not ask)". Do not stop to ask me unless the source contradicts itself about scope; if it does, ask once, with all your questions together.
+4. Decide every open question yourself. Prefer the smallest choice that keeps the design intact. Prefer derived state: when a value can be computed from state that already exists (counts, totals, flags, statuses, lookups), compute it where it is used instead of storing, caching, or syncing a copy. Store it only when it can't be derived (user input, external data) or computing it is measurably too slow, and record why as a decision. Write each decision as one line under "Decisions (do not ask)". Do not stop to ask me unless the source contradicts itself about scope; if it does, ask once, with all your questions together.
 5. Write the plan in the shape below.
 6. Check the plan:
    - Confirm every path, line range, symbol, and command in it exists, with grep or by running it.
@@ -133,6 +133,7 @@ Shape of the plan:
   - Run the build and tests only at the **Gate** lines. If a gate fails, fix it before you go on.
   - Make at most 3 attempts at any failing step. After the third, stop, write what you tried and what failed under "Open questions", and report back. Do not guess past it.
   - Never edit or delete an existing test to make it pass.
+  - Derive, don't store: compute values from existing state instead of adding fields, counters, caches, or flags that must be kept in sync. Add stored state only where the plan says to.
   - The files and directories not to read, and to read only the line ranges the plan names.
   - The conventions-file rules that matter, restated in a few words.
   - Completeness: everything in scope must work and be tested. No stubs, no TODOs, no enum values for out-of-scope features.
@@ -142,7 +143,7 @@ Shape of the plan:
 - "## Phase 0 — Baseline": the exact build and test commands, which must pass before anything changes.
 - Phases 1..n. Size each so $worker can finish it in one context window, and give each one checkbox per small action. Be concrete:
   - exact file paths, and shell commands (cp, mv, sed) for mechanical copies;
-  - code blocks for new types, enums, constants, and public API signatures;
+  - code blocks for new types, enums, constants, and public API signatures, with derived values written as functions or computed properties, not fields;
   - tables with exact numbers for data;
   - numbered rules, in order, for logic and edge cases;
   - "Read only lines X–Y" or line-range tables (keep, rewrite, delete) when the worker edits a copied file;
