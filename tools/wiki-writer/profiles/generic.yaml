@@ -1,0 +1,8 @@
+entity_types:
+  topic:
+    fields: [description]
+  term:
+    fields: [description]
+  procedure:
+    fields: [description]
+namespaces: [topics]

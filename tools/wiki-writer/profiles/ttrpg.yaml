@@ -1,0 +1,12 @@
+entity_types:
+  rule:
+    fields: [description, statistics]
+  class:
+    fields: [description, statistics]
+  item:
+    fields: [description, statistics]
+  spell:
+    fields: [description, statistics]
+  creature:
+    fields: [description, statistics]
+namespaces: [rules, classes, items, spells, creatures]

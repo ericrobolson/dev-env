@@ -5,3 +5,7 @@ install-skills:
 install-workflows:
 	@if [ -z "$(path)" ]; then echo "Usage: make install-workflows path=<destination>"; exit 1; fi
 	cp -r workflows/ $(path)/workflows
+
+.PHONY: install-wiki-writer
+install-wiki-writer:
+	$(MAKE) -C tools/wiki-writer deps install

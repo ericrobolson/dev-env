@@ -1,0 +1,24 @@
+[package]
+name = "wiki-writer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+sha2 = "0.11"
+regex = "1"
+strsim = "0.11"
+pulldown-cmark = "0.13"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+roxmltree = "0.20"
+lopdf = "0.36"
+tempfile = "3"
+fs2 = "0.4"
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3"
