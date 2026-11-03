@@ -48,7 +48,7 @@ read -r agent
 case "$agent" in
     claude)
         planner=claude-opus-5-5
-        worker=claude-haiku-5-5
+        worker=claude-sonnet-5-5
         ;;
     codex)
         planner=gpt-6-astra

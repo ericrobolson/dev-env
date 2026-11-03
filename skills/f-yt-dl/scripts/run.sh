@@ -180,16 +180,15 @@ step "transcribe (Metal GPU)"
 if [[ -f "$MD" ]]; then
     log "cached: $MD ($(wc -l < "$MD" | tr -d ' ') lines)"
 else
-    TXT_TMP="${AUDIO%.wav}.txt.tmp"
     SRT_TMP="${AUDIO%.wav}.srt.tmp"
     run_cmd "Running whisper with Metal GPU" \
         "$WHISPER_BIN" -m "$MODEL_PATH" -f "$AUDIO" --output-txt --output-file "${AUDIO%.wav}.tmp"
-    TXT_OUT=$(ls "${AUDIO%.wav}"*.txt.tmp 2>/dev/null | head -1)
+    TXT_OUT="${AUDIO%.wav}.tmp.txt"  # whisper appends .txt to --output-file
     [[ -f "$TXT_OUT" ]] || fail "Transcription failed — check log: $LOGFILE"
     {
         printf "# %s\n\n" "$VIDEO_TITLE"
         printf "[Source](%s)\n\n" "$URL"
-        printf "---\n\n"
+        printf -- "---\n\n"
         cat "$TXT_OUT"
     } > "$MD"
     rm -f "$TXT_OUT" 2>/dev/null || true
