@@ -49,14 +49,17 @@ case "$agent" in
     claude)
         planner=claude-opus-5-5
         worker=claude-sonnet-5-5
+        escalation=claude-opus-5-5
         ;;
     codex)
         planner=gpt-6-astra
         worker=gpt-6-luna
+        escalation=gpt-6-astra
         ;;
     opencode)
         planner=anthropic/claude-opus-5-5
         worker=anthropic/claude-sonnet-5-5
+        escalation=anthropic/claude-opus-5-5
         ;;
     *)
         fail "unknown agent: $agent"
@@ -131,7 +134,7 @@ Shape of the plan:
   - Do the phases in order. Tick each box (\`- [x]\`) in this file as you finish it.
   - Write each phase's tests first and watch them fail, then implement.
   - Run the build and tests only at the **Gate** lines. If a gate fails, fix it before you go on.
-  - Make at most 3 attempts at any failing step. After the third, stop, write what you tried and what failed under "Open questions", and report back. Do not guess past it.
+  - Make at most 3 attempts at any failing step yourself. If it still fails after the third, hand it to a $escalation subagent (set the model explicitly) with the step, the error, and what you tried; attempts 4 to 7 run on $escalation. If it still fails after the seventh attempt, stop, write what was tried and what failed under "Open questions", and ask me for further instructions. Do not guess past it.
   - Never edit or delete an existing test to make it pass.
   - Derive, don't store: compute values from existing state instead of adding fields, counters, caches, or flags that must be kept in sync. Add stored state only where the plan says to.
   - The files and directories not to read, and to read only the line ranges the plan names.
@@ -159,6 +162,7 @@ Rules:
 - Prefer copying and editing existing code over writing new code, and say exactly what to copy.
 - Use plain words and short sentences. One action per checkbox.
 - Only write to $plan_file and scratch files.
+- If the sandbox blocks something while you plan (a build or test command, a read, network access), do not stop. Make your best attempt from what you can see, mark what you could not run or verify in the plan, and write the plan anyway.
 PROMPT
 
 printf '\nCreated %s\n' "$plan_file" >&2
