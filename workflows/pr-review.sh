@@ -73,6 +73,7 @@ add_check 10 'Does the change deliver the intended outcome with a focused scope 
 add_section '12. Design and contracts'
 add_check 11 'Are responsibilities, files, dependencies, and reused capabilities in the right system boundaries?'
 add_check 11 'Is the complexity justified, are existing contracts preserved, and is feedback about material issues rather than preference?'
+add_check 11 'Does any calculation, query, filter, report, or automation read the name of the code that ran as if it were data, to decide whether or when a business fact happened? A stored code identifier records which code ran, not what happened. Examples include an action name in an audit or version table, a job or worker class name, a resolver, mutation, or handler name, a module or function name in a source column, or the text of a log line. If code is renamed, split, or replaced, the answer changes for existing records, so the old name can never be removed. Flag it and suggest recording the business fact explicitly instead.'
 
 add_section '13. Review feedback and follow-up'
 add_check 12 'Are comments concrete, prioritized, and actionable, with blockers clearly separated from optional suggestions?'
