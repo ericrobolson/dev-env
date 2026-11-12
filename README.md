@@ -6,6 +6,17 @@ A reproducible development environment with AI-assisted feature building tools.
 
 Install the local wiki generator with `make install-wiki-writer`. Start a project with `wikify.sh campaign rulebook.pdf supplement.epub`, or run `wikify.sh --project wikis/campaign` to resume one. See the [WikiWriter guide](tools/wiki-writer/README.md) and [architecture](tools/wiki-writer/ARCHITECTURE.md) for setup, stages, and limits.
 
+## Guided tutorials
+
+`workflows/tutor.sh` turns a plan file or prompt into a resumable tutorial where
+you write the code and the agent teaches, hints, and reviews. Start with
+`claude "$(workflows/tutor.sh new ideas/plan.md)"` and resume any later session
+with `claude "$(workflows/tutor.sh resume)"` (or the `f-tutor` skill). State lives
+in `tutor/<id>/` (`TUTOR.md` protocol, `curriculum.md` checkboxes, `lessons/`,
+`log.md`). Each step's starting point is a git snapshot under `refs/tutor/`, so
+`tutor.sh diff` shows exactly what you changed, including uncommitted files and
+mid-step commits. `tutor.sh status` and `tutor.sh list` show progress.
+
 ## Narrated explainers
 
 Run `workflows/explainer.sh "Review the architecture of this service"` and give
