@@ -37,3 +37,20 @@ Keep `explainer_tts.py` beside the shell script when copying workflows. The
 runtime follows [kokoro-onnx](https://github.com/thewh1teagle/kokoro-onnx), its
 [matched model assets](https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.1),
 and [lameenc](https://github.com/chrisstaite/lameenc).
+
+## UML architecture diagrams
+
+Run `workflows/uml-diagram.sh src/ "focus on the API"` and give its printed
+workflow to Claude, Codex, or OpenCode. It writes
+`docs/uml/<timestamp>_<Name>.md` in the current directory, embedding SVG
+diagrams rendered from PlantUML sources in the sibling `<timestamp>_<Name>/`:
+a context view, a component view (fields, methods/commands, relationships), and
+a table citing `file:line` evidence for every arrow. With no path it diagrams
+the current directory.
+
+The script installs a pinned, checksum-verified [PlantUML](https://github.com/plantuml/plantuml)
+under `~/local-tools/plantuml/<version>` (override with `UML_PLANTUML_DIR`) and
+skips the download when it is already there. macOS arm64 and Linux use the native
+build, so no Java or Graphviz is needed; elsewhere the jar needs Java 11+. Use
+`--setup-only` to install alone, or `--render docs/uml/<file>.md` to re-render
+and check a doc's diagrams after editing them.
